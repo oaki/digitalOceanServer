@@ -1,0 +1,18 @@
+# Postfix relay-only aliases (see CONTEXT.md "Mail Alias" and
+# docs/adr/0003-mail-relay-only-no-mailboxes.md). No mail is ever stored on
+# the droplet — every alias forwards immediately to an external mailbox.
+#
+# Verified 2026-07-30: postfix is NOT installed on the droplet at all
+# (`dpkg -l postfix` shows "un" = not installed; no postfix.service unit
+# exists). Installing + configuring it is step 1 of docs/mail-alias.md the
+# first time an alias is actually requested (e.g. info@siebi.sk).
+
+postfix_installed: false
+postfix_active: false
+
+aliases: []
+# Example entry once scripts/add-mail-alias.sh has run:
+#   - address: info@siebi.sk
+#     forwards_to: pavolbincik@gmail.com
+#     domain: siebi.sk
+#     spf_record_added: true   # owner confirmed the SPF TXT record is live

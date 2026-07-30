@@ -1,0 +1,39 @@
+# Domains pointed at the droplet's IP (142.93.166.76). DNS itself is managed
+# manually by the owner outside this repo — see docs/adr/0002-manual-dns-management.md
+# and docs/adding-a-domain.md. This file just tracks what each domain routes to.
+#
+# Snapshot verified live against nginx sites-available/newDefault and `certbot
+# certificates` on 2026-07-30.
+
+domains:
+  - domain: chess-analysis.com
+    routes_to: "static_site: chess-analysis-gui (301 redirect to www)"
+    tls: letsencrypt, cert "chess-analysis.com" (covers this + api/chat/www), auto-renews via certbot.timer
+
+  - domain: www.chess-analysis.com
+    routes_to: "static_site: chess-analysis-gui"
+    tls: letsencrypt, cert "chess-analysis.com"
+
+  - domain: api.chess-analysis.com
+    routes_to: "service: server (port 8080)"
+    tls: letsencrypt, cert "chess-analysis.com"
+
+  - domain: chat.chess-analysis.com
+    routes_to: "service: chat (port 3003)"
+    tls: letsencrypt, cert "chess-analysis.com"
+
+  - domain: pulseguard-ping-worker.chess-analysis.com
+    routes_to: "service: pulseguard-worker (port 3000)"
+    tls: letsencrypt, own cert "pulseguard-ping-worker.chess-analysis.com"
+
+  - domain: pulseguard-uptime-worker.chess-analysis.com
+    routes_to: "service: pulseguard-uptime-worker (port 3001)"
+    tls: letsencrypt, own cert "pulseguard-uptime-worker.chess-analysis.com"
+
+  - domain: worker.chess-analysis.com
+    routes_to: "unknown — cert exists (worker.chess-analysis.com) but no matching nginx vhost or PM2 service found as of 2026-07-30"
+    tls: letsencrypt, own cert (unused?)
+    drift: >
+      A valid cert exists for this domain but no nginx sites-enabled file
+      references it. Investigate before reusing this subdomain — it may be
+      stale, or the vhost may have been removed without removing the cert.

@@ -1,0 +1,119 @@
+# Authoritative record of PM2-managed Services and nginx-served Static Sites
+# on the droplet. See CONTEXT.md for what "Service" / "Static Site" mean, and
+# docs/adr/0005-inventory-authoritative-for-ports.md for why this file (not a
+# live ss/pm2 scan) decides the next port.
+#
+# Adding a service: scripts/add-service.sh (updates this file, then deploys).
+# Adding a static site: scripts/add-static-site.sh.
+#
+# Snapshot verified live against the droplet on 2026-07-30 (pm2 list, nginx
+# configs, ss -tlnp, git remotes).
+
+next_free_port: 3004  # highest allocated port (3003) + 1
+
+services:
+  - name: server
+    dir: chess-analysis-api
+    repo: https://github.com/oaki/chess-analysis-api.git
+    port: 8080
+    domain: api.chess-analysis.com
+    env_keys:
+      - APP_ENVIRONMENT
+      - SWAGGER_HOST
+      - GOOGLE_BASE_URL
+      - GOOGLE_REDIRECT_URL
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - DB_APP_NAME
+      - DB_APP_USER
+      - DB_APP_PASS
+      - DB_APP_TYPE
+      - DB_APP_HOST
+      - DB_APP_PORT
+      - DB_APP_SYNCHRONIZE
+      - DB_EVALUATION_TYPE
+      - DB_EVALUATION_NAME
+      - DB_EVALUATION_USER
+      - DB_EVALUATION_PASS
+      - DB_EVALUATION_HOST
+      - DB_EVALUATION_PORT
+      - POSTGRE_DB_TYPE
+      - POSTGRE_DB_NAME
+      - POSTGRE_DB_USER
+      - POSTGRE_DB_PASS
+      - POSTGRE_DB_HOST
+      - POSTGRE_DB_PORT
+      - DB_GAMES_TYPE
+      - DB_GAMES_NAME
+      - DB_GAMES_USER
+      - DB_GAMES_PASS
+      - DB_GAMES_HOST
+      - DB_GAMES_PORT
+      - DB_GAMES_SYNCHRONIZE
+      - SERVER_PORT
+      - IO_PORT
+      - JWT_KEY
+      - NEXT_CHESS_MOVE_COOKIE
+    notes: >
+      PM2 name "server" collides with the generic term "server" used
+      elsewhere in docs (see CONTEXT.md Avoid-list) — kept as-is, renaming a
+      live PM2 process isn't worth the churn.
+
+  - name: worker1
+    dir: chess-analysis-worker
+    repo: https://github.com/oaki/chess-analysis-worker.git
+    port: null
+    domain: null
+    env_keys:
+      - APP_ENVIRONMENT
+      - API_HOST
+      - SYZYGY_PATH
+    notes: Background worker — no HTTP port, no domain, no nginx vhost.
+
+  - name: chat
+    dir: codeChatServer
+    repo: https://github.com/oaki/codeChatServer.git
+    port: 3003
+    domain: chat.chess-analysis.com
+    env_keys:
+      - PORT
+      - OPENAI_API_KEY
+
+  - name: pulseguard-worker
+    dir: pulseguard-worker
+    repo: null
+    port: 3000
+    domain: pulseguard-ping-worker.chess-analysis.com
+    env_keys:
+      - PORT
+      - CROSS_CHECK_PSK
+    drift: >
+      Found 2026-07-30: /opt/apps/pulseguard-worker is NOT a git repository
+      (deployed by hand), breaking the "every project has git" convention.
+      Also its PM2 process name ("pulseguard-worker") doesn't match its
+      subdomain ("pulseguard-ping-worker") — the name/dir/domain convention
+      other services follow was not applied here. Left as-is rather than
+      silently "fixed"; re-deploy through scripts/add-service.sh next time
+      this needs a real change, giving it a proper git repo and matching name.
+
+  - name: pulseguard-uptime-worker
+    dir: pulseguard-uptime-worker
+    repo: null
+    port: 3001
+    domain: pulseguard-uptime-worker.chess-analysis.com
+    env_keys: []
+    drift: >
+      Found 2026-07-30: /opt/apps/pulseguard-uptime-worker is NOT a git
+      repository (deployed by hand), same as pulseguard-worker above. Has an
+      ecosystem.config.js instead of a plain PM2 start command and no .env.
+
+static_sites:
+  - name: chess-analysis-gui
+    dir: chess-analysis-gui
+    repo: https://github.com/oaki/chess-analysis-gui.git
+    build_output: build
+    domain: www.chess-analysis.com
+    notes: >
+      Root domain chess-analysis.com 301-redirects to www.chess-analysis.com
+      at the nginx level (see inventory/domains.yml) rather than being a
+      separate site.
