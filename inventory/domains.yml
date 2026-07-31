@@ -12,10 +12,26 @@ droplets:
   old: 142.93.166.76   # Ubuntu 20.04, being phased out
   new: 165.22.16.160    # Ubuntu 24.04, primary target for all new work
 
+# billing: only set on the domain's own top-level entry (not on subdomains
+# like api./www./pulseguard-* — those aren't separately registered/billed).
+# ALWAYS ask for these three when adding a new domain going forward (see
+# docs/adding-a-domain.md) — owner: self (free/personal, skip reminders) or
+# owner: customer (needs cost/expiry_date/hosting_cost so the 35-day-before
+# renewal reminder in docs/operations.md has something to check). Example
+# for a customer domain:
+#   billing:
+#     owner: customer
+#     customer_name: "Acme s.r.o."
+#     registration_cost: "12 EUR/year"
+#     hosting_cost: "5 EUR/month"
+#     expiry_date: 2027-03-15
+
 domains:
   - domain: chess-analysis.com
     routes_to: "static_site: chess-analysis-gui (301 redirect to www)"
     droplet_serving: new
+    billing:
+      owner: self   # user's own domain, free — no renewal reminder needed
     tls: letsencrypt, cert "chess-analysis.com" (old droplet's cert, now serving from new droplet's copied build)
     notes: >
       DNS cut over ahead of schedule (apex + wildcard moved before the gui
@@ -74,6 +90,8 @@ domains:
   - domain: siebi.sk
     routes_to: "php_site: siebi.sk"
     droplet_serving: new
+    billing:
+      owner: self   # user's own domain, free — no renewal reminder needed
     tls: letsencrypt, cert "siebi.sk", issued 2026-07-31, expires 2026-10-29
     notes: Brand new deployment, only ever existed on the new droplet.
 

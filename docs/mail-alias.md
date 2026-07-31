@@ -26,6 +26,18 @@ the primary domain is) when prompted — the `DEBIAN_FRONTEND=noninteractive`
 flag above uses defaults; if it needs the mail_name set explicitly, use
 `debconf-set-selections` first, then reinstall/reconfigure.
 
+**Gotcha hit on `siebi.sk`'s setup:** if the domain you set as `postfix/mailname`
+during install is the *same* domain you're about to add as a Mail Alias,
+Postfix's installer puts it in `mydestination` (local delivery) automatically
+— but it also needs to be in `virtual_alias_domains` (step 2) for forwarding
+to work. Having it in **both** triggers a real warning
+(`do not list domain X in BOTH mydestination and virtual_alias_domains`) and
+is ambiguous about which delivery path wins. Fix: `postconf -e` to remove
+that domain from `mydestination`, keeping only `$myhostname` and the
+`localhost`/`localdomain` entries — check `postconf mydestination` after
+step 3 below and fix this before considering the alias done, not just when
+Postfix happens to warn about it.
+
 ## Step 2 — Configure virtual alias forwarding (first alias only)
 
 Add to `/etc/postfix/main.cf`:

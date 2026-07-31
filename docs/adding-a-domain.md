@@ -6,6 +6,12 @@ records directly.
 
 ## Steps
 
+0. **Ask whether this domain is the owner's own (free/personal) or a
+   customer's.** If it's a customer's, also ask: registration cost, hosting
+   cost, and the exact expiry/renewal date — record all of it in
+   `inventory/domains.yml`'s `billing` field (see that file's comment for
+   the exact shape). This is what powers the 35-days-before-expiry reminder
+   in `docs/operations.md`; skip it only for the owner's own domains.
 1. **Tell the owner the exact record to add**, at whichever registrar/DNS
    provider the domain uses:
    ```

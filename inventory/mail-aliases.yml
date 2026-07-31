@@ -15,6 +15,13 @@ aliases:
     domain: siebi.sk
     spf_record_added: true   # "v=spf1 mx -all", confirmed live via dig
     mx_record: "siebi.sk, priority 10 (points at itself, since siebi.sk's own A record is the droplet)"
+    verified: >
+      2026-07-31 — real end-to-end test: email sent from pavolbincik@gmail.com
+      arrived, matched the alias, forwarded successfully
+      (postfix log: "status=sent (250 2.0.0 OK)" to gmail-smtp-in.l.google.com).
+      Also fixed: postfix's installer had put siebi.sk in BOTH `mydestination`
+      and `virtual_alias_domains` (a real warning, ambiguous delivery path) —
+      removed from mydestination. See docs/mail-alias.md's "Gotcha" note.
     notes: >
       siebi.sk previously had full mail hosting via Websupport (MX to
       mailin1/mailin2, working SPF/DMARC) — those MX records were DELETED

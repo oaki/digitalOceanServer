@@ -170,6 +170,13 @@ php_sites:
     fpm_socket: /run/php/php8.4-fpm-siebi.sock
     db: sqlite (database/database.sqlite)
     build_step: "npm install && npm run build (vite)"
+    auto_deploy: >
+      GitHub Actions (.github/workflows/deploy.yml in the siebi.sk repo)
+      redeploys on every push to main. Uses a DEDICATED, command-restricted
+      SSH key (not the main root key) — see ADR-0009. The forced command is
+      /opt/apps/siebi.sk-deploy.sh on the droplet (git pull, composer
+      install, artisan migrate --force, config/route cache, npm build,
+      fix storage/bootstrap-cache ownership).
     env_keys:
       - APP_KEY
       - APP_URL
