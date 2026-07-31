@@ -17,7 +17,7 @@ running these steps by hand — it does the same thing, reading/writing
    avoids leaking secret values into shell history or process listings on
    either end):
    ```bash
-   scp -i ~/.ssh/id_ed25519 LOCAL_ENV_FILE root@142.93.166.76:/opt/apps/SERVICE_NAME/.env
+   scp -i ~/.ssh/id_ed25519 LOCAL_ENV_FILE root@165.22.16.160:/opt/apps/SERVICE_NAME/.env
    ```
 4. **Start with PM2:**
    ```bash
@@ -53,3 +53,16 @@ scripts/deploy.sh SERVICE_NAME
 ```
 Runs `git pull && npm install && npm run build && pm2 restart SERVICE_NAME`
 on the droplet.
+
+## Exception: services that live inside someone else's monorepo
+
+`pulseguard-ping-worker` and `pulseguard-uptime-worker` don't get their own
+clone — they're subdirectories of the private `oaki/pulseGuard` repo. Cloning
+that whole ~100MB repo per worker wastes disk on a droplet already tight on
+space. Instead there's a single shared `git sparse-checkout` at
+`/opt/pulseGuard-monorepo`, and each worker's `/opt/apps/NAME` is a symlink
+into it. See `docs/adr/0006-shared-monorepo-clone-for-pulseguard-workers.md`
+for the full setup and `scripts/deploy-pulseguard-workers.sh` to redeploy
+both after an upstream change. Only reach for this pattern when a service
+genuinely lives inside a larger repo you don't control the layout of — a new
+service with its own repo should still get its own plain clone.

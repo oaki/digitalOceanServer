@@ -31,7 +31,7 @@ cat <<EOF
     for $DOMAIN manually (see docs/mail-alias.md step 4):
 
   Type: MX     Name: @    Value: $DOMAIN (or a real mail host), priority 10
-  Type: TXT    Name: @    Value: "v=spf1 ip4:142.93.166.76 ~all"
+  Type: TXT    Name: @    Value: "v=spf1 ip4:165.22.16.160 ~all"
 
 ==> Then add to inventory/mail-aliases.yml:
 

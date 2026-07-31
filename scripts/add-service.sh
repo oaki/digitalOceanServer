@@ -53,7 +53,7 @@ EOF
 nginx -t && systemctl reload nginx"
 
 echo "==> Requesting SSL cert"
-ssh_run "certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email pavolbincik@gmail.com"
+ssh_run "certbot --nginx -d $DOMAIN --non-interactive --agree-tos --redirect --email pavolbincik@gmail.com"
 
 echo "==> Verifying"
 ssh_run "pm2 list | grep $SERVICE_NAME && curl -s -o /dev/null -w 'HTTP %{http_code}\n' http://localhost:$PORT/"

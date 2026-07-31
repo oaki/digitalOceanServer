@@ -37,7 +37,7 @@ no port — nginx serves its built files directly. Use
 ## Redeploying
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@142.93.166.76 "cd /opt/apps/SITE_NAME && git pull && npm install && npm run build"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "cd /opt/apps/SITE_NAME && git pull && npm install && npm run build"
 ```
 No PM2/nginx restart needed — nginx reads the rebuilt files from disk on the
 next request.

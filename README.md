@@ -1,7 +1,7 @@
 # digitalOceanServer
 
 Infrastructure documentation & scripts for the DigitalOcean droplet at
-`142.93.166.76` (Ubuntu 20.04, hosts chess-analysis.com and related
+`165.22.16.160` (Ubuntu 24.04, hosts chess-analysis.com and related
 projects). This repo is the source of truth for what runs there and how to
 change it — it replaced the old `droplet` Claude skill, which held the same
 knowledge as unstructured prose with no tracked state.

@@ -2,7 +2,7 @@
 # Shared config for every script in this directory. Source it, don't run it.
 set -euo pipefail
 
-DROPLET_HOST="root@142.93.166.76"
+DROPLET_HOST="root@165.22.16.160"   # migrated from 142.93.166.76, see ADR-0008
 SSH_KEY="$HOME/.ssh/id_ed25519"
 SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=no)
 

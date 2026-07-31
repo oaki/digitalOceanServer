@@ -1,6 +1,6 @@
 # Droplet Infrastructure
 
-Domain glossary for managing the single Ubuntu droplet (`142.93.166.76`) that hosts
+Domain glossary for managing the single Ubuntu droplet (`165.22.16.160`) that hosts
 chess-analysis.com and related projects. This repo is the source of truth for what
 runs on the droplet and how to change it — see `docs/` for runbooks, `inventory/`
 for current state, `scripts/` for automation. It replaces the old `droplet` Claude
@@ -9,7 +9,7 @@ skill, which duplicated this knowledge in prose with no structured state.
 ## Language
 
 **Droplet**:
-The single Ubuntu 20.04 server at `142.93.166.76` that hosts every Service, Static
+The single Ubuntu 24.04 server at `165.22.16.160` that hosts every Service, Static
 Site, Domain, and Mail Alias tracked in this repo.
 _Avoid_: server (collides with the PM2 process literally named `server`), host, box.
 
@@ -25,6 +25,13 @@ A git-deployed set of built files served directly by nginx (e.g. a React
 `build/` folder) — no PM2 process, no port, no reverse proxy. Rebuilt in place on
 `git pull` and served by pointing nginx's `root` at the build output.
 _Avoid_: app, service (a Static Site has no running process to restart).
+
+**PHP Site**:
+A git-deployed site like a Static Site, but `.php` requests are handed to a
+shared PHP-FPM pool instead of being served as static files or proxied to a
+Node process. Requires PHP-FPM installed (only supported on Ubuntu 22.04/24.04
+— see `docs/adr/0007-php-via-ondrej-ppa-shared-fpm-pool.md`).
+_Avoid_: app, service (see Service for the Node/PM2 equivalent).
 
 **Domain**:
 A DNS name pointed at the droplet's IP. Registration and DNS records are managed
@@ -56,7 +63,11 @@ reconciling drift.
 **Drift**:
 A mismatch between what `inventory/` says and what's actually running on the
 droplet. Two Services (`pulseguard-worker`, `pulseguard-uptime-worker`) were
-found in this state on 2026-07-30 — deployed by hand rather than via git, and
-with a PM2 name that doesn't match their subdomain. Recorded in
-`inventory/services.yml` rather than silently fixed, since re-deploying them
-correctly means rebuilding how they were originally set up.
+found in this state on 2026-07-30 — deployed by hand rather than via git, one
+with a PM2 name that didn't match its subdomain — and were migrated the same
+day onto a proper git-backed sparse checkout of their upstream monorepo (see
+`docs/adr/0006-shared-monorepo-clone-for-pulseguard-workers.md`); the
+port-3000 one was renamed `pulseguard-ping-worker` in the process. Recorded
+here as the reference example of what "drift" means and how it gets resolved
+— found, recorded in `inventory/`, then fixed deliberately rather than
+silently.

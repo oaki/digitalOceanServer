@@ -1,13 +1,36 @@
-# Authoritative record of PM2-managed Services and nginx-served Static Sites
-# on the droplet. See CONTEXT.md for what "Service" / "Static Site" mean, and
+# Authoritative record of PM2-managed Services and nginx-served Static Sites.
+# See CONTEXT.md for what "Service" / "Static Site" mean, and
 # docs/adr/0005-inventory-authoritative-for-ports.md for why this file (not a
 # live ss/pm2 scan) decides the next port.
 #
 # Adding a service: scripts/add-service.sh (updates this file, then deploys).
 # Adding a static site: scripts/add-static-site.sh.
 #
-# Snapshot verified live against the droplet on 2026-07-30 (pm2 list, nginx
-# configs, ss -tlnp, git remotes).
+# MID-MIGRATION as of 2026-07-31 — see docs/adr/0008-migrate-droplet-142-to-165.md.
+# Everything below is deployed and verified on the NEW droplet
+# (165.22.16.160), but DNS cutover is staged per-domain — check
+# inventory/domains.yml's `droplet_serving` field for what's actually live
+# where right now. Originally snapshotted from the old droplet on 2026-07-30.
+#
+# All five services now pin an explicit `node_interpreter` (an absolute path
+# under /root/.nvm/versions/node/) rather than a bare "node" resolved via
+# PATH. This was deliberate: PM2's own boot-time resurrect (systemd unit
+# pm2-root.service) does NOT include nvm in its PATH, so a bare "node"
+# resolves to the apt/nodesource-installed /usr/bin/node (Node 14.15.3,
+# EOL) at boot. Two services (server, worker1) actually depended on that
+# apt binary in practice — found and fixed 2026-07-30 ahead of the Ubuntu
+# 20.04->24.04 upgrade, since that apt package's source (nodesource's
+# node_14.x repo, pinned to "focal") won't resolve on a newer codename.
+# pm2-root.service's PATH also now has nvm's v20.20.2 bin prepended as a
+# fallback so PM2's own CLI bootstrap doesn't depend on /usr/bin/node either.
+
+# chat (codeChatServer) was decommissioned entirely 2026-07-31 (owner's
+# call) — removed from both droplets, no longer tracked here.
+node_interpreters:
+  chess-analysis-api (server): /root/.nvm/versions/node/v14.15.3/bin/node   # pinned 2026-07-30 on old droplet; new droplet uses the same version deliberately (composer.lock-style pin, not yet tested against newer Node)
+  chess-analysis-worker (worker1): /root/.nvm/versions/node/v14.15.3/bin/node   # same as above
+  pulseguard-ping-worker: /root/.nvm/versions/node/v24.18.1/bin/node   # new droplet's LTS - no version-specific requirement, dependency-free script
+  pulseguard-uptime-worker: /root/.nvm/versions/node/v24.18.1/bin/node   # same
 
 next_free_port: 3004  # highest allocated port (3003) + 1
 
@@ -70,42 +93,39 @@ services:
       - SYZYGY_PATH
     notes: Background worker — no HTTP port, no domain, no nginx vhost.
 
-  - name: chat
-    dir: codeChatServer
-    repo: https://github.com/oaki/codeChatServer.git
-    port: 3003
-    domain: chat.chess-analysis.com
-    env_keys:
-      - PORT
-      - OPENAI_API_KEY
-
-  - name: pulseguard-worker
-    dir: pulseguard-worker
-    repo: null
+  - name: pulseguard-ping-worker
+    dir: pulseguard-ping-worker
+    repo: git@github-pulseguard:oaki/pulseGuard.git   # private, via SSH deploy key
+    repo_subdir: workers/system
+    monorepo_checkout: /opt/pulseGuard-monorepo   # shared sparse checkout, see ADR-0006
     port: 3000
     domain: pulseguard-ping-worker.chess-analysis.com
     env_keys:
       - PORT
       - CROSS_CHECK_PSK
-    drift: >
-      Found 2026-07-30: /opt/apps/pulseguard-worker is NOT a git repository
-      (deployed by hand), breaking the "every project has git" convention.
-      Also its PM2 process name ("pulseguard-worker") doesn't match its
-      subdomain ("pulseguard-ping-worker") — the name/dir/domain convention
-      other services follow was not applied here. Left as-is rather than
-      silently "fixed"; re-deploy through scripts/add-service.sh next time
-      this needs a real change, giving it a proper git repo and matching name.
+    notes: >
+      Originally migrated onto a proper git repo 2026-07-30 on the old
+      droplet (was "pulseguard-worker", not a git repo — see
+      docs/adr/0006-shared-monorepo-clone-for-pulseguard-workers.md, renamed
+      to match its domain). Redeployed fresh onto the new droplet 2026-07-31
+      as part of the droplet migration (ADR-0008) using the same
+      sparse-checkout pattern; a second dedicated deploy key was generated
+      for this droplet (GitHub requires unique keys per repo).
 
   - name: pulseguard-uptime-worker
     dir: pulseguard-uptime-worker
-    repo: null
+    repo: git@github-pulseguard:oaki/pulseGuard.git   # private, via SSH deploy key
+    repo_subdir: workers/uptime/vps
+    monorepo_checkout: /opt/pulseGuard-monorepo   # shared sparse checkout, see ADR-0006
     port: 3001
     domain: pulseguard-uptime-worker.chess-analysis.com
-    env_keys: []
-    drift: >
-      Found 2026-07-30: /opt/apps/pulseguard-uptime-worker is NOT a git
-      repository (deployed by hand), same as pulseguard-worker above. Has an
-      ecosystem.config.js instead of a plain PM2 start command and no .env.
+    env_keys:
+      - PORT
+      - CROSS_CHECK_PSK
+    notes: >
+      Originally migrated onto a proper git repo 2026-07-30 on the old
+      droplet (previously not a git repo). Redeployed fresh onto the new
+      droplet 2026-07-31 as part of the droplet migration (ADR-0008).
 
 static_sites:
   - name: chess-analysis-gui
@@ -113,7 +133,57 @@ static_sites:
     repo: https://github.com/oaki/chess-analysis-gui.git
     build_output: build
     domain: www.chess-analysis.com
+    build_status: STOPGAP — pre-built output copied, not rebuilt from source on this droplet
     notes: >
       Root domain chess-analysis.com 301-redirects to www.chess-analysis.com
       at the nginx level (see inventory/domains.yml) rather than being a
       separate site.
+
+      This is an old webpack 4 / react-scripts-era toolchain that does NOT
+      build cleanly on modern Node: hits OpenSSL 3's legacy-provider issue
+      AND (after working around that) a strict ESM `exports` resolution
+      error in a css-loader/postcss dependency chain. Rather than pin to
+      Node 14 workarounds, the user asked to defer a proper rebuild and
+      modernize the tooling later instead. As a stopgap (needed urgently
+      once DNS for the apex/wildcard was cut over ahead of the rebuild being
+      ready), the OLD droplet's already-built `build/` output was copied
+      directly via scp — same files, zero rebuild risk, but this directory
+      will go stale the next time the source repo changes until the real
+      rebuild happens. See task tracking for "Deploy chess-analysis-gui
+      static site" for the deferred modernization work.
+
+# PHP support — see docs/deploying-a-php-site.md and
+# docs/adr/0007-php-via-ondrej-ppa-shared-fpm-pool.md. Only works on
+# Ubuntu 22.04/24.04 (jammy/noble) — the ondrej/php PPA publishes nothing
+# for older releases.
+php_installed: true   # PHP 8.3.33 via ondrej PPA, installed 2026-07-31 on the new droplet (165.22.16.160)
+php_shared_pool_socket: /run/php/php8.3-fpm.sock
+
+php_sites:
+  - name: siebi.sk
+    dir: siebi.sk
+    repo: https://github.com/oaki/siebi.sk.git
+    domain: siebi.sk
+    framework: laravel (v13.20.0)
+    php_version: "8.4"
+    fpm_pool: /etc/php/8.4/fpm/pool.d/siebi.conf (dedicated, not the shared 8.3 pool)
+    fpm_socket: /run/php/php8.4-fpm-siebi.sock
+    db: sqlite (database/database.sqlite)
+    build_step: "npm install && npm run build (vite)"
+    env_keys:
+      - APP_KEY
+      - APP_URL
+      - MAIL_MAILER
+      - MAIL_HOST
+      - MAIL_USERNAME
+      - MAIL_PASSWORD
+    notes: >
+      composer.lock is locked to Symfony/Laravel package versions requiring
+      PHP >=8.4, even though composer.json's constraint (^8.3) would allow
+      8.3 — hence its own PHP 8.4 pool, separate from the droplet's shared
+      8.3 pool used by other PHP sites. Domain originally had full mail
+      hosting via Websupport (MX/SPF/DMARC) but that requires a paid hosting
+      plan attachment to actually use — owner chose free instead: Websupport
+      MX records were replaced with this droplet's own Postfix relay (see
+      inventory/mail-aliases.yml). MAIL_MAILER is still the default `log`
+      driver (doesn't actually send) until real outgoing mail is needed.

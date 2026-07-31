@@ -2,29 +2,60 @@
 
 All of these are also available as `scripts/*.sh` — see that directory.
 
+## Default parking page for unconfigured domains
+
+Both droplets have an nginx `default_server` catch-all
+(`/etc/nginx/sites-available/000-default-catchall`, serving
+`/opt/nginx-default/index.html`) for any domain that resolves here but has
+no vhost yet — a wildcard DNS record added ahead of the actual site, or a
+domain pointed here before deployment. Without this, an unmatched request
+falls through unpredictably to whichever vhost nginx picks first (this
+actually happened — random bot traffic with fake Host headers was landing on
+`api.chess-analysis.com`'s vhost before this existed). The HTTPS side of the
+catch-all uses the self-signed `ssl-cert` package cert (`snakeoil`) since
+there's no way to get a publicly-trusted cert for a domain name we don't
+know ahead of time — a browser warning here is expected, same as any
+registrar's own default parking page.
+
+**When adding a new droplet or vhost file:** never name a real, in-use vhost
+file something implying it's disposable (`default`, `newDefault`, etc.) —
+that ambiguity caused an actual near-incident here: `newDefault` on the old
+droplet holds the real `chess-analysis.com`/`www`/`api` vhosts, and looked
+enough like the standard placeholder to almost get deleted while setting up
+this exact catch-all. Check a vhost file's actual `server_name` contents
+before removing it, not just its filename.
+
+## Standing rule: every domain redirects HTTP → HTTPS with a valid cert
+
+Non-negotiable for every Domain in `inventory/domains.yml`, no exceptions.
+Every `certbot --nginx` call in `scripts/*.sh` includes `--redirect` for this
+reason — never issue a cert without it. If a domain is ever found serving
+plain HTTP or with an expired/missing cert, that's a bug to fix immediately,
+not a style choice.
+
 **Check status** (`scripts/status.sh`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@142.93.166.76 "pm2 list && df -h / && free -h"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "pm2 list && df -h / && free -h"
 ```
 
 **View logs** (`scripts/logs.sh SERVICE_NAME`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@142.93.166.76 "pm2 logs SERVICE_NAME --lines 50 --nostream"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "pm2 logs SERVICE_NAME --lines 50 --nostream"
 ```
 
 **Restart a service** (`scripts/restart.sh SERVICE_NAME`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@142.93.166.76 "pm2 restart SERVICE_NAME"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "pm2 restart SERVICE_NAME"
 ```
 
 **Redeploy** (`scripts/deploy.sh SERVICE_NAME`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@142.93.166.76 "cd /opt/apps/SERVICE_NAME && git pull && npm install && npm run build && pm2 restart SERVICE_NAME"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "cd /opt/apps/SERVICE_NAME && git pull && npm install && npm run build && pm2 restart SERVICE_NAME"
 ```
 
 **Disk usage:**
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@142.93.166.76 "du -sh /opt/apps/* | sort -h"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "du -sh /opt/apps/* | sort -h"
 ```
 
 ## Known operational risks (as of 2026-07-30)

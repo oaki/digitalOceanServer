@@ -2,17 +2,26 @@
 # docs/adr/0003-mail-relay-only-no-mailboxes.md). No mail is ever stored on
 # the droplet — every alias forwards immediately to an external mailbox.
 #
-# Verified 2026-07-30: postfix is NOT installed on the droplet at all
-# (`dpkg -l postfix` shows "un" = not installed; no postfix.service unit
-# exists). Installing + configuring it is step 1 of docs/mail-alias.md the
-# first time an alias is actually requested (e.g. info@siebi.sk).
+# Installed 2026-07-31 on the NEW droplet (165.22.16.160) for siebi.sk.
+# Not installed on the old droplet (142.93.166.76) — never was needed there.
 
-postfix_installed: false
-postfix_active: false
+postfix_installed: true
+postfix_active: true
+postfix_droplet: 165.22.16.160
 
-aliases: []
-# Example entry once scripts/add-mail-alias.sh has run:
-#   - address: info@siebi.sk
-#     forwards_to: pavolbincik@gmail.com
-#     domain: siebi.sk
-#     spf_record_added: true   # owner confirmed the SPF TXT record is live
+aliases:
+  - address: info@siebi.sk
+    forwards_to: pavolbincik@gmail.com
+    domain: siebi.sk
+    spf_record_added: true   # "v=spf1 mx -all", confirmed live via dig
+    mx_record: "siebi.sk, priority 10 (points at itself, since siebi.sk's own A record is the droplet)"
+    notes: >
+      siebi.sk previously had full mail hosting via Websupport (MX to
+      mailin1/mailin2, working SPF/DMARC) — those MX records were DELETED
+      and replaced with this droplet's, since using Websupport's mail would
+      have required a paid hosting-plan attachment; this route is free
+      (uses infrastructure already paid for). _dmarc.siebi.sk's DMARC TXT
+      record was left as-is; still valid since it isn't SPF/DKIM-specific.
+      mail/webmail/smtp/pop3/imap.siebi.sk A records still point at
+      Websupport's now-unused mail servers — harmless leftovers, safe to
+      delete later, not urgent.

@@ -2,7 +2,7 @@
 # Deploy a new Static Site: clone, build, nginx vhost, Certbot.
 # Usage: scripts/add-static-site.sh SITE_NAME REPO_URL DOMAIN [BUILD_OUTPUT_DIR]
 #
-# DNS for DOMAIN must already resolve to 142.93.166.76 before running this —
+# DNS for DOMAIN must already resolve to 165.22.16.160 before running this —
 # see docs/adding-a-domain.md. BUILD_OUTPUT_DIR defaults to "build".
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -15,8 +15,8 @@ BUILD_OUTPUT_DIR="${4:-build}"
 
 echo "==> Checking DNS for $DOMAIN"
 resolved="$(dig +short "$DOMAIN" | tail -1)"
-if [ "$resolved" != "142.93.166.76" ]; then
-  echo "ERROR: $DOMAIN resolves to '${resolved:-nothing}', not 142.93.166.76." >&2
+if [ "$resolved" != "165.22.16.160" ]; then
+  echo "ERROR: $DOMAIN resolves to '${resolved:-nothing}', not 165.22.16.160." >&2
   echo "Add the A record first (see docs/adding-a-domain.md) and wait for it to propagate." >&2
   exit 1
 fi
@@ -37,7 +37,7 @@ EOF
 nginx -t && systemctl reload nginx"
 
 echo "==> Requesting SSL cert"
-ssh_run "certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email pavolbincik@gmail.com"
+ssh_run "certbot --nginx -d $DOMAIN --non-interactive --agree-tos --redirect --email pavolbincik@gmail.com"
 
 echo "==> Done. Now add an entry to inventory/services.yml under static_sites:"
 cat <<EOF

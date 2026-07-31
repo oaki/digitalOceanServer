@@ -1,39 +1,83 @@
-# Domains pointed at the droplet's IP (142.93.166.76). DNS itself is managed
-# manually by the owner outside this repo — see docs/adr/0002-manual-dns-management.md
-# and docs/adding-a-domain.md. This file just tracks what each domain routes to.
+# Domains and which droplet actually serves them right now. DNS itself is
+# managed manually by the owner outside this repo — see
+# docs/adr/0002-manual-dns-management.md and docs/adding-a-domain.md.
 #
-# Snapshot verified live against nginx sites-available/newDefault and `certbot
-# certificates` on 2026-07-30.
+# Mid-migration as of 2026-07-31: see docs/adr/0008-migrate-droplet-142-to-165.md.
+# Cutover is staged per-domain, not atomic — droplet_serving reflects where
+# a domain's DNS *actually* points right now (verified live via dig), which
+# may lag what inventory/services.yml says is deployed. The old droplet
+# (142.93.166.76) is only safe to delete once every row below says "new".
+
+droplets:
+  old: 142.93.166.76   # Ubuntu 20.04, being phased out
+  new: 165.22.16.160    # Ubuntu 24.04, primary target for all new work
 
 domains:
   - domain: chess-analysis.com
     routes_to: "static_site: chess-analysis-gui (301 redirect to www)"
-    tls: letsencrypt, cert "chess-analysis.com" (covers this + api/chat/www), auto-renews via certbot.timer
+    droplet_serving: new
+    tls: letsencrypt, cert "chess-analysis.com" (old droplet's cert, now serving from new droplet's copied build)
+    notes: >
+      DNS cut over ahead of schedule (apex + wildcard moved before the gui
+      rebuild was ready) — handled by copying the OLD droplet's already-built
+      static/build output directly rather than rebuilding from source. See
+      services.yml's chess-analysis-gui entry.
 
   - domain: www.chess-analysis.com
     routes_to: "static_site: chess-analysis-gui"
-    tls: letsencrypt, cert "chess-analysis.com"
+    droplet_serving: new
+    tls: same as apex
 
   - domain: api.chess-analysis.com
     routes_to: "service: server (port 8080)"
-    tls: letsencrypt, cert "chess-analysis.com"
+    droplet_serving: old
+    tls: letsencrypt, cert "chess-analysis.com" (old droplet)
+    cutover_status: >
+      DNS record updated by owner to point at new droplet but NOT YET
+      PROPAGATED as of last check (2026-07-31) — stuck longer than the
+      600s TTL would suggest. Service is fully deployed and verified on
+      the new droplet, just waiting on DNS + then a cert issuance there.
 
   - domain: chat.chess-analysis.com
-    routes_to: "service: chat (port 3003)"
-    tls: letsencrypt, cert "chess-analysis.com"
+    routes_to: null
+    droplet_serving: null
+    notes: >
+      Service decommissioned entirely 2026-07-31 (owner's call) — removed
+      from both droplets (PM2, nginx vhost, code). This subdomain's DNS
+      was never its own explicit record (relied on the wildcard); no DNS
+      action needed. It's part of the old droplet's shared
+      "chess-analysis.com" cert SAN list — trim that SAN on next renewal
+      so renewal doesn't depend on a domain nobody serves.
 
   - domain: pulseguard-ping-worker.chess-analysis.com
-    routes_to: "service: pulseguard-worker (port 3000)"
-    tls: letsencrypt, own cert "pulseguard-ping-worker.chess-analysis.com"
+    routes_to: "service: pulseguard-ping-worker (port 3000)"
+    droplet_serving: old
+    tls: letsencrypt, own cert (old droplet)
+    cutover_status: same as api.chess-analysis.com — deployed + verified on new droplet, DNS not yet propagated
 
   - domain: pulseguard-uptime-worker.chess-analysis.com
     routes_to: "service: pulseguard-uptime-worker (port 3001)"
-    tls: letsencrypt, own cert "pulseguard-uptime-worker.chess-analysis.com"
+    droplet_serving: old
+    tls: letsencrypt, own cert (old droplet)
+    cutover_status: same as api.chess-analysis.com — deployed + verified on new droplet, DNS not yet propagated
 
   - domain: worker.chess-analysis.com
     routes_to: "unknown — cert exists (worker.chess-analysis.com) but no matching nginx vhost or PM2 service found as of 2026-07-30"
+    droplet_serving: old
     tls: letsencrypt, own cert (unused?)
     drift: >
       A valid cert exists for this domain but no nginx sites-enabled file
       references it. Investigate before reusing this subdomain — it may be
       stale, or the vhost may have been removed without removing the cert.
+      Not carried over to the new droplet.
+
+  - domain: siebi.sk
+    routes_to: "php_site: siebi.sk"
+    droplet_serving: new
+    tls: letsencrypt, cert "siebi.sk", issued 2026-07-31, expires 2026-10-29
+    notes: Brand new deployment, only ever existed on the new droplet.
+
+  - domain: www.siebi.sk
+    routes_to: "php_site: siebi.sk"
+    droplet_serving: new
+    tls: same cert as siebi.sk
