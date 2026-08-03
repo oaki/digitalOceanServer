@@ -30,6 +30,13 @@ server {
     server_name $DOMAIN;
     root /opt/apps/$SITE_NAME/$BUILD_OUTPUT_DIR;
     index index.html;
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)\$ {
+        expires 1y;
+        add_header Cache-Control \"public, immutable\";
+        try_files \$uri =404;
+    }
+
     try_files \$uri \$uri/ /index.html?\$args;
     listen 80;
 }
@@ -38,6 +45,9 @@ nginx -t && systemctl reload nginx"
 
 echo "==> Requesting SSL cert"
 ssh_run "certbot --nginx -d $DOMAIN --non-interactive --agree-tos --redirect --email pavolbincik@gmail.com"
+
+echo "==> Enabling HTTP/2 (certbot doesn't add this itself)"
+ssh_run "sed -i -E 's/listen ([^;]*)443 ssl;/listen \1443 ssl http2;/' /etc/nginx/sites-enabled/$SITE_NAME && nginx -t && systemctl reload nginx"
 
 echo "==> Done. Now add an entry to inventory/services.yml under static_sites:"
 cat <<EOF

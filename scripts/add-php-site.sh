@@ -32,6 +32,12 @@ server {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
 
+    location ~* \.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)\$ {
+        expires 1y;
+        add_header Cache-Control \"public, immutable\";
+        try_files \$uri =404;
+    }
+
     location ~ \.php\$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/run/php/php8.3-fpm.sock;
@@ -44,6 +50,9 @@ nginx -t && systemctl reload nginx"
 
 echo "==> Requesting SSL cert"
 ssh_run "certbot --nginx -d $DOMAIN --non-interactive --agree-tos --redirect --email pavolbincik@gmail.com"
+
+echo "==> Enabling HTTP/2 (certbot doesn't add this itself)"
+ssh_run "sed -i -E 's/listen ([^;]*)443 ssl;/listen \1443 ssl http2;/' /etc/nginx/sites-enabled/$SITE_NAME && nginx -t && systemctl reload nginx"
 
 echo "==> Verifying"
 ssh_run "curl -s -o /dev/null -w 'HTTP %{http_code}\n' https://$DOMAIN/"

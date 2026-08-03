@@ -32,7 +32,7 @@ domains:
     droplet_serving: new
     billing:
       owner: self   # user's own domain, free — no renewal reminder needed
-    tls: letsencrypt, cert "chess-analysis.com" (old droplet's cert, now serving from new droplet's copied build)
+    tls: letsencrypt, cert "chess-analysis.com" (new droplet, issued 2026-08-03, expires 2026-11-01), HTTP/2 enabled
     notes: >
       DNS cut over ahead of schedule (apex + wildcard moved before the gui
       rebuild was ready) — handled by copying the OLD droplet's already-built
@@ -45,14 +45,24 @@ domains:
     tls: same as apex
 
   - domain: api.chess-analysis.com
-    routes_to: "service: server (port 8080)"
+    routes_to: "service: server (port 8080 in inventory, actually chess-analysis-api-blue/green on 8080/8081 - see services.yml, now blue-green deployed)"
     droplet_serving: old
     tls: letsencrypt, cert "chess-analysis.com" (old droplet)
     cutover_status: >
-      DNS record updated by owner to point at new droplet but NOT YET
-      PROPAGATED as of last check (2026-07-31) — stuck longer than the
-      600s TTL would suggest. Service is fully deployed and verified on
-      the new droplet, just waiting on DNS + then a cert issuance there.
+      Root cause found 2026-08-03: this record genuinely was never saved in
+      the DNS panel (confirmed by querying the authoritative nameserver
+      -ns1.digitalocean.com- directly, bypassing all caching resolvers - it
+      still showed the old IP). Owner re-saved it and it's now correct at
+      the authoritative source, but still lagging on both Google (8.8.8.8)
+      and Cloudflare (1.1.1.1) public resolvers as of last check, unlike its
+      sibling records (pulseguard-ping-worker, pulseguard-uptime-worker,
+      www, apex, wildcard) which all propagated quickly after the same fix.
+      Service is fully deployed, blue-green, and verified on the new
+      droplet - purely waiting on DNS. A GitHub Actions auto-deploy
+      workflow for chess-analysis-api is ready to install but deliberately
+      NOT yet applied - the repo already has an old workflow deploying to
+      THIS old droplet on push, and replacing it before this record
+      propagates would silently desync production from what gets merged.
 
   - domain: chat.chess-analysis.com
     routes_to: null
@@ -67,15 +77,15 @@ domains:
 
   - domain: pulseguard-ping-worker.chess-analysis.com
     routes_to: "service: pulseguard-ping-worker (port 3000)"
-    droplet_serving: old
-    tls: letsencrypt, own cert (old droplet)
-    cutover_status: same as api.chess-analysis.com — deployed + verified on new droplet, DNS not yet propagated
+    droplet_serving: new
+    tls: letsencrypt, own cert (new droplet, issued 2026-08-03, expires 2026-11-01), HTTP/2 enabled
+    notes: Cut over 2026-08-03. Verified externally (401 as expected - CROSS_CHECK_PSK auth required).
 
   - domain: pulseguard-uptime-worker.chess-analysis.com
     routes_to: "service: pulseguard-uptime-worker (port 3001)"
-    droplet_serving: old
-    tls: letsencrypt, own cert (old droplet)
-    cutover_status: same as api.chess-analysis.com — deployed + verified on new droplet, DNS not yet propagated
+    droplet_serving: new
+    tls: letsencrypt, own cert (new droplet, issued 2026-08-03, expires 2026-11-01), HTTP/2 enabled
+    notes: Cut over 2026-08-03. Verified externally (401 as expected - CROSS_CHECK_PSK auth required).
 
   - domain: worker.chess-analysis.com
     routes_to: "unknown — cert exists (worker.chess-analysis.com) but no matching nginx vhost or PM2 service found as of 2026-07-30"

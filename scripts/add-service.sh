@@ -55,6 +55,9 @@ nginx -t && systemctl reload nginx"
 echo "==> Requesting SSL cert"
 ssh_run "certbot --nginx -d $DOMAIN --non-interactive --agree-tos --redirect --email pavolbincik@gmail.com"
 
+echo "==> Enabling HTTP/2 (certbot doesn't add this itself)"
+ssh_run "sed -i -E 's/listen ([^;]*)443 ssl;/listen \1443 ssl http2;/' /etc/nginx/sites-enabled/$SERVICE_NAME && nginx -t && systemctl reload nginx"
+
 echo "==> Verifying"
 ssh_run "pm2 list | grep $SERVICE_NAME && curl -s -o /dev/null -w 'HTTP %{http_code}\n' http://localhost:$PORT/"
 

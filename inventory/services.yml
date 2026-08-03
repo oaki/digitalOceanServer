@@ -38,8 +38,33 @@ services:
   - name: server
     dir: chess-analysis-api
     repo: https://github.com/oaki/chess-analysis-api.git
-    port: 8080
+    default_branch: master   # not main
+    port: 8080   # legacy field - see deployment below, actually blue-green on 8080/8081
     domain: api.chess-analysis.com
+    deployment: >
+      BLUE-GREEN as of 2026-08-02 (see docs/adr/0010-blue-green-deploy-for-chess-analysis-api.md).
+      Two PM2 processes: chess-analysis-api-blue (dir
+      /opt/apps/chess-analysis-api-blue, port 8080) and
+      chess-analysis-api-green (dir /opt/apps/chess-analysis-api-green, port
+      8081) - each a full separate git checkout. nginx's active backend is
+      switched via /etc/nginx/chess-analysis-api-active.conf (an `include`d
+      file setting $api_backend), flipped atomically by
+      /opt/apps/chess-analysis-api-deploy.sh after health-checking the
+      newly-deployed (inactive) color. Redeploy: run that script, or push to
+      master once its GitHub Actions workflow is wired up (see cutover_status
+      in inventory/domains.yml - deliberately not yet done, old workflow
+      still targets the old droplet until api.chess-analysis.com's DNS
+      finishes propagating).
+    redis: >
+      Installed 2026-08-02 on the new droplet, capped at 64MB (allkeys-lru)
+      via /etc/redis/redis.conf. Provisioned for socket.io's cluster
+      adapter as part of considering PM2 cluster mode for zero-downtime
+      deploys, but NOT currently wired into the app - blue-green was used
+      instead once we found the app's workersIo/usersIo in-memory tracking
+      (src/sockets/initSockets.ts) isn't cluster-safe even with the
+      adapter (custom app state, not something socket.io's adapter covers).
+      Redis sits unused for now; fine to repurpose or remove later if
+      nothing else needs it.
     env_keys:
       - APP_ENVIRONMENT
       - SWAGGER_HOST
