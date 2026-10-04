@@ -227,7 +227,11 @@ systemd_services:
       - 7882/udp (ICE/UDP mux)
       - 3478/udp (TURN/UDP)
       - 5349/tcp (TURN/TLS)
-    notes: Small self-hosted staging instance; monitor the shared 1-vCPU droplet.
+      - 30000-40000/udp (TURN relay allocation range)
+    notes: >
+      Small self-hosted staging instance, deployed and externally verified on
+      2026-10-04; monitor the shared 1-vCPU droplet. Host UDP buffers are tuned
+      by /etc/sysctl.d/99-livekit.conf.
 
 static_sites:
   - name: chess-analysis-gui

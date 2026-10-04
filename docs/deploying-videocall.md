@@ -16,10 +16,16 @@ domain `call.contexthub.uk`, including LiveKit's `/rtc` WebSocket signaling.
 - TCP 7881: LiveKit ICE fallback;
 - UDP 7882: LiveKit ICE media mux;
 - UDP 3478: TURN/UDP;
-- TCP 5349: TURN/TLS.
+- TCP 5349: TURN/TLS;
+- UDP 30000-40000: TURN relay allocation range.
 
-The last four ports must be allowed by both UFW and any DigitalOcean Cloud
+The last five port entries must be allowed by both UFW and any DigitalOcean Cloud
 Firewall attached to the droplet.
+
+The LiveKit host tuning is persisted in `/etc/sysctl.d/99-livekit.conf`.
+`/etc/livekit` is owned by `root:livekit` with mode `0750`, and the config is
+`root:livekit` with mode `0640`, so the unprivileged service can traverse the
+directory without exposing its API secret.
 
 ## Secrets
 

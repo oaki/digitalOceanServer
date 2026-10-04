@@ -115,10 +115,11 @@ domains:
 
   - domain: call.contexthub.uk
     routes_to: "services: videocall-web (3006), videocall-api (3005), systemd: videocall-livekit"
-    droplet_serving: pending-dns
-    tls: pending letsencrypt certificate
+    droplet_serving: new
+    tls: letsencrypt, cert "call.contexthub.uk", issued 2026-10-04, expires 2027-01-02, HTTP/2 enabled
     notes: >
-      Cloudflare A record must point directly to 165.22.16.160 with proxy off.
-      nginx routes pages, explicit API paths, and LiveKit /rtc signaling on one
-      hostname. LiveKit media and TURN also use dedicated public ports recorded
-      in inventory/services.yml.
+      Cloudflare A record points directly to 165.22.16.160 with proxy off.
+      Deployed and externally verified on 2026-10-04. nginx routes pages,
+      explicit API paths, and LiveKit /rtc signaling on one hostname. LiveKit
+      media and TURN also use dedicated public ports recorded in
+      inventory/services.yml.
