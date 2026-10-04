@@ -46,23 +46,13 @@ domains:
 
   - domain: api.chess-analysis.com
     routes_to: "service: server (port 8080 in inventory, actually chess-analysis-api-blue/green on 8080/8081 - see services.yml, now blue-green deployed)"
-    droplet_serving: old
-    tls: letsencrypt, cert "chess-analysis.com" (old droplet)
+    droplet_serving: new
+    tls: letsencrypt, cert "api.chess-analysis.com" (new droplet, expires 2026-11-16)
     cutover_status: >
-      Root cause found 2026-08-03: this record genuinely was never saved in
-      the DNS panel (confirmed by querying the authoritative nameserver
-      -ns1.digitalocean.com- directly, bypassing all caching resolvers - it
-      still showed the old IP). Owner re-saved it and it's now correct at
-      the authoritative source, but still lagging on both Google (8.8.8.8)
-      and Cloudflare (1.1.1.1) public resolvers as of last check, unlike its
-      sibling records (pulseguard-ping-worker, pulseguard-uptime-worker,
-      www, apex, wildcard) which all propagated quickly after the same fix.
-      Service is fully deployed, blue-green, and verified on the new
-      droplet - purely waiting on DNS. A GitHub Actions auto-deploy
-      workflow for chess-analysis-api is ready to install but deliberately
-      NOT yet applied - the repo already has an old workflow deploying to
-      THIS old droplet on push, and replacing it before this record
-      propagates would silently desync production from what gets merged.
+      Cut over and externally verified on 2026-09-17. DNS resolves to
+      165.22.16.160. GitHub Actions now deploys with the dedicated restricted
+      key through the blue-green script. The nginx proxy_pass intentionally
+      has no trailing slash so request paths reach Hapi unchanged.
 
   - domain: chat.chess-analysis.com
     routes_to: null
@@ -109,3 +99,26 @@ domains:
     routes_to: "php_site: siebi.sk"
     droplet_serving: new
     tls: same cert as siebi.sk
+
+  - domain: api.contexthub.uk
+    routes_to: "service: personal-api (port 3004)"
+    droplet_serving: new
+    billing:
+      owner: self   # personal project - confirm if this changes
+    tls: letsencrypt, cert "api.contexthub.uk", issued 2026-09-02, expires 2026-12-01, HTTP/2 enabled
+    notes: >
+      DNS on Cloudflare nameservers (armfazh.ns.cloudflare.com,
+      tess.ns.cloudflare.com) rather than the registrar directly - proxy
+      (orange cloud) is OFF for this record, pointing straight at
+      165.22.16.160. If proxy is ever turned back on, Cloudflare SSL/TLS mode
+      must be "Full (strict)" or the HTTPS redirect will loop.
+
+  - domain: call.contexthub.uk
+    routes_to: "services: videocall-web (3006), videocall-api (3005), systemd: videocall-livekit"
+    droplet_serving: pending-dns
+    tls: pending letsencrypt certificate
+    notes: >
+      Cloudflare A record must point directly to 165.22.16.160 with proxy off.
+      nginx routes pages, explicit API paths, and LiveKit /rtc signaling on one
+      hostname. LiveKit media and TURN also use dedicated public ports recorded
+      in inventory/services.yml.

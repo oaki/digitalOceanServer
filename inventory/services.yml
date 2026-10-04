@@ -27,12 +27,15 @@
 # chat (codeChatServer) was decommissioned entirely 2026-07-31 (owner's
 # call) — removed from both droplets, no longer tracked here.
 node_interpreters:
-  chess-analysis-api (server): /root/.nvm/versions/node/v14.15.3/bin/node   # pinned 2026-07-30 on old droplet; new droplet uses the same version deliberately (composer.lock-style pin, not yet tested against newer Node)
+  chess-analysis-api (server): /root/.nvm/versions/node/v24.18.1/bin/node   # upgraded 2026-09-17; the modernized pino stack requires node: built-ins unavailable in Node 14
   chess-analysis-worker (worker1): /root/.nvm/versions/node/v14.15.3/bin/node   # same as above
   pulseguard-ping-worker: /root/.nvm/versions/node/v24.18.1/bin/node   # new droplet's LTS - no version-specific requirement, dependency-free script
   pulseguard-uptime-worker: /root/.nvm/versions/node/v24.18.1/bin/node   # same
+  personal-api: /root/.nvm/versions/node/v24.18.1/bin/node   # new droplet's LTS; PM2 started with --node-args='--env-file=.env' (fastify app reads .env natively via Node's --env-file, no dotenv package)
+  videocall-api: /root/.nvm/versions/node/v24.18.1/bin/node
+  videocall-web: /root/.nvm/versions/node/v24.18.1/bin/node
 
-next_free_port: 3004  # highest allocated port (3003) + 1
+next_free_port: 3007  # 3005-3006 are allocated to the video-call API and web
 
 services:
   - name: server
@@ -51,10 +54,9 @@ services:
       file setting $api_backend), flipped atomically by
       /opt/apps/chess-analysis-api-deploy.sh after health-checking the
       newly-deployed (inactive) color. Redeploy: run that script, or push to
-      master once its GitHub Actions workflow is wired up (see cutover_status
-      in inventory/domains.yml - deliberately not yet done, old workflow
-      still targets the old droplet until api.chess-analysis.com's DNS
-      finishes propagating).
+      master through .github/workflows/deploy.yml. The workflow targets the
+      new droplet with its dedicated command-restricted DEPLOY_SSH_KEY and
+      invokes /opt/apps/chess-analysis-api-deploy.sh.
     redis: >
       Installed 2026-08-02 on the new droplet, capped at 64MB (allkeys-lru)
       via /etc/redis/redis.conf. Provisioned for socket.io's cluster
@@ -101,6 +103,7 @@ services:
       - SERVER_PORT
       - IO_PORT
       - JWT_KEY
+      - CHESS_WATCH_API_KEY
       - NEXT_CHESS_MOVE_COOKIE
     notes: >
       PM2 name "server" collides with the generic term "server" used
@@ -151,6 +154,80 @@ services:
       Originally migrated onto a proper git repo 2026-07-30 on the old
       droplet (previously not a git repo). Redeployed fresh onto the new
       droplet 2026-07-31 as part of the droplet migration (ADR-0008).
+
+  - name: personal-api
+    dir: personal-api
+    repo: git@github-personal-api:oaki/personal-api.git   # private, via SSH deploy key
+    port: 3004
+    domain: api.contexthub.uk
+    env_keys:
+      - NODE_ENV
+      - PORT
+      - HOST
+      - TZ
+      - APP_VERSION
+      - PERSONAL_API_KEY
+      - EDUPAGE_SCHOOL
+      - EDUPAGE_USERNAME
+      - EDUPAGE_PASSWORD
+      - REDIS_URL
+      - LOG_LEVEL
+    redis: >
+      Uses the droplet's existing shared Redis instance (127.0.0.1:6379, no
+      auth, 64MB allkeys-lru) via REDIS_URL - previously installed for
+      chess-analysis-api but left unused. First real consumer.
+    notes: >
+      Deployed 2026-09-02. Fastify app (framework, per pm2 logs). Deploy key
+      "personal-api_deploy" regenerated once (original was replaced before
+      the GitHub deploy key was actually added) - see github-personal-api
+      host alias in the droplet's ~/.ssh/config. NODE_ENV in the .env copied
+      to the droplet was "development" at deploy time - confirm with owner
+      whether that should be "production".
+
+  - name: videocall-api
+    dir: videocall
+    repo: git@github-videocall:oaki/videocall.git
+    port: 3005
+    domain: call.contexthub.uk
+    public_paths: /health, /admin/* API routes, /device-enrollments, /calls, /push-subscriptions, /diagnostic-events
+    env_keys:
+      - DATABASE_URL
+      - PORT
+      - WEB_ORIGIN
+      - TRUSTED_PROXY
+      - ADMIN_API_TOKEN
+      - LIVEKIT_URL
+      - LIVEKIT_API_KEY
+      - LIVEKIT_API_SECRET
+      - FCM_PROJECT_ID
+      - FCM_SERVICE_ACCOUNT_JSON
+      - WEB_PUSH_VAPID_SUBJECT
+      - WEB_PUSH_VAPID_PUBLIC_KEY
+      - WEB_PUSH_VAPID_PRIVATE_KEY
+    notes: Shares one monorepo checkout with videocall-web. PostgreSQL is local.
+
+  - name: videocall-web
+    dir: videocall
+    repo: git@github-videocall:oaki/videocall.git
+    port: 3006
+    domain: call.contexthub.uk
+    env_keys:
+      - NEXT_PUBLIC_API_ORIGIN
+      - NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY
+    notes: Next.js PWA; default nginx route for call.contexthub.uk.
+
+systemd_services:
+  - name: videocall-livekit
+    binary: /usr/local/bin/livekit-server
+    config: /etc/livekit/livekit.yaml
+    domain: call.contexthub.uk
+    ports:
+      - 7880/tcp (loopback-facing signaling via nginx)
+      - 7881/tcp (ICE/TCP)
+      - 7882/udp (ICE/UDP mux)
+      - 3478/udp (TURN/UDP)
+      - 5349/tcp (TURN/TLS)
+    notes: Small self-hosted staging instance; monitor the shared 1-vCPU droplet.
 
 static_sites:
   - name: chess-analysis-gui
