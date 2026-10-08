@@ -21,3 +21,16 @@ infrastructure, third-party actions) than this repo's own scripts.
 
 Same pattern to follow for any other repo that gets auto-deploy later: new
 dedicated key, its own forced command, its own deploy script.
+
+Applied to `chess-analysis-v3` (2026-10-07) with these additions, which new
+repos should copy:
+- `restrict,command=...` instead of `command=...` alone: `command=` does not
+  stop port forwarding (`ssh -N -L ...` to PostgreSQL or other local ports),
+  `restrict` turns off forwarding, agent, X11 and PTY.
+- The host key is pinned in a `DEPLOY_KNOWN_HOSTS` secret instead of
+  `StrictHostKeyChecking=no`.
+- The forced script lives outside the clone, so a pushed commit cannot
+  change what the key runs.
+- Input (commit id, web export on stdin) is validated strictly: commits on
+  `origin/main` only, forward only, archive unpacked as `nobody` with size
+  limits and no links.

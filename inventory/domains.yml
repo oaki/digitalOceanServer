@@ -40,9 +40,14 @@ domains:
       services.yml's chess-analysis-gui entry.
 
   - domain: www.chess-analysis.com
-    routes_to: "static_site: chess-analysis-gui"
+    routes_to: "static_site: chess-analysis-v3-web"
     droplet_serving: new
     tls: same as apex
+    notes: >
+      Since 2026-10-05 the v3 web app (Next.js static export,
+      /opt/apps/chess-analysis-v3/apps/web/out, built locally and rsynced,
+      runbook deploy/README.md in chess-analysis-v3). The legacy GUI build
+      stays on disk; its vhost is in /root/nginx-backup/chess-analysis.com.2026-10-05.
 
   - domain: api.chess-analysis.com
     routes_to: "service: server (port 8080 in inventory, actually chess-analysis-api-blue/green on 8080/8081 - see services.yml, now blue-green deployed)"
@@ -53,6 +58,17 @@ domains:
       165.22.16.160. GitHub Actions now deploys with the dedicated restricted
       key through the blue-green script. The nginx proxy_pass intentionally
       has no trailing slash so request paths reach Hapi unchanged.
+
+  - domain: v3.chess-analysis.com
+    routes_to: "service: chess-analysis-v3-api (port 3007), WebSocket /v1/workers/connect"
+    droplet_serving: new
+    tls: letsencrypt, cert "v3.chess-analysis.com", issued 2026-10-04, expires 2027-01-02
+    notes: >
+      Resolves through the *.chess-analysis.com wildcard, no own DNS record.
+      nginx vhost /etc/nginx/sites-enabled/v3.chess-analysis.com (template in
+      the repo: deploy/nginx-v3.chess-analysis.com.conf) disables proxy
+      buffering for GraphQL multipart subscriptions. Externally verified
+      2026-10-04 with the deployment smoke test.
 
   - domain: chat.chess-analysis.com
     routes_to: null

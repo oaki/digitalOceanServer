@@ -34,8 +34,10 @@ node_interpreters:
   personal-api: /root/.nvm/versions/node/v24.18.1/bin/node   # new droplet's LTS; PM2 started with --node-args='--env-file=.env' (fastify app reads .env natively via Node's --env-file, no dotenv package)
   videocall-api: /root/.nvm/versions/node/v24.18.1/bin/node
   videocall-web: /root/.nvm/versions/node/v24.18.1/bin/node
+  chess-analysis-v3-api: /root/.nvm/versions/node/v24.18.1/bin/node   # runs TypeScript via --import tsx (deploy/ecosystem.config.cjs)
+  chess-analysis-v3-worker: /root/.nvm/versions/node/v24.18.1/bin/node
 
-next_free_port: 3007  # 3005-3006 are allocated to the video-call API and web
+next_free_port: 3008  # 3005-3006 video-call, 3007 chess-analysis-v3-api
 
 services:
   - name: server
@@ -216,6 +218,65 @@ services:
       - NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY
     notes: Next.js PWA; default nginx route for call.contexthub.uk.
 
+  - name: chess-analysis-v3-api
+    dir: chess-analysis-v3   # monorepo; this process runs server/
+    repo: git@github-chess-analysis-v3:oaki/chess-analysis-v3.git   # private, read-only deploy key chess-analysis-v3_deploy
+    port: 3007
+    domain: v3.chess-analysis.com
+    pm2_config: deploy/ecosystem.config.cjs (starts both v3 processes)
+    database: local PostgreSQL 16, database and role chess_v3
+    auto_deploy: >
+      GitHub Actions (.github/workflows/deploy.yml in the repo) tests every
+      push to main, builds the web export on the runner and deploys API,
+      worker and www in one SSH call. Dedicated, command-restricted key
+      (ADR-0009, comment "gha-deploy chess-analysis-v3"); forced command
+      /opt/apps/chess-analysis-v3-deploy.sh = copy of deploy/auto-deploy.sh,
+      kept outside the clone. Forward-only, only commits on origin/main.
+      Setup and revoke: deploy/README.md "Automatic deployment".
+    env_keys:
+      - APP_ENV
+      - HTTP_PORT
+      - DATABASE_URL
+      - TOKEN_ISSUER
+      - TOKEN_SIGNING_KEY
+      - AUTH_ISSUER
+      - AUTH_CLIENT_ID
+      - PUBLIC_API_ORIGIN
+      - PUBLIC_WEB_ORIGIN
+      - AUTH_NATIVE_REDIRECT_URIS
+      - TB_MAX_PIECES
+      - TB_LICHESS_FALLBACK
+    notes: >
+      Deployed 2026-10-04 next to v2 (api.chess-analysis.com unchanged).
+      Runbook and redeploy steps: deploy/README.md in the repo; post-deploy
+      check: `cd server && pnpm smoke --yes`. Secrets in server/.env were
+      generated on the droplet (mode 600). AUTH_CLIENT_ID still empty, so
+      sign-in answers 503 until SanioAuth registers the client. Opening
+      books imported: gm2001 (priority 10) and book_new (11.1M moves,
+      priority 5, 1.2 GB in PostgreSQL) on 2026-10-04 with nice/ionice in
+      6.2 min; v2 latency stayed 0.18-0.28 s during the import. Source files
+      kept in /opt/apps/chess-analysis-v3/books for re-imports.
+
+  - name: chess-analysis-v3-worker
+    dir: chess-analysis-v3   # same checkout, runs worker/
+    repo: git@github-chess-analysis-v3:oaki/chess-analysis-v3.git
+    port: null
+    domain: null
+    env_keys:
+      - API_WS_URL
+      - WORKER_SECRET
+      - STOCKFISH_PATH
+      - THREADS
+      - HASH_MB
+      - MAX_LINES
+      - SYZYGY_PATH
+      - SYZYGY_PIECES
+    notes: >
+      Platform analysis worker (Stockfish 16 from apt, 1 thread, 128 MB hash,
+      Syzygy 5-piece tables shared with v2 at /opt/apps/syzygy). Connects to
+      the API over ws://127.0.0.1:3007/v1/workers/connect. Registered as
+      platform worker "droplet-1".
+
 systemd_services:
   - name: videocall-livekit
     binary: /usr/local/bin/livekit-server
@@ -234,11 +295,21 @@ systemd_services:
       by /etc/sysctl.d/99-livekit.conf.
 
 static_sites:
+  - name: chess-analysis-v3-web
+    dir: chess-analysis-v3/apps/web
+    repo: git@github.com:oaki/chess-analysis-v3.git
+    build_output: out
+    domain: www.chess-analysis.com
+    build_status: built locally and rsynced (next build needs ~1.4 GB RAM), see deploy/README.md in the repo
+    notes: >
+      Replaced chess-analysis-gui on 2026-10-05. Security headers from
+      deploy/nginx-web-headers.conf (nginx include from the repo checkout).
+
   - name: chess-analysis-gui
     dir: chess-analysis-gui
     repo: https://github.com/oaki/chess-analysis-gui.git
     build_output: build
-    domain: www.chess-analysis.com
+    domain: none (replaced by chess-analysis-v3-web on 2026-10-05, files kept for rollback)
     build_status: STOPGAP — pre-built output copied, not rebuilt from source on this droplet
     notes: >
       Root domain chess-analysis.com 301-redirects to www.chess-analysis.com
