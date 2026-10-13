@@ -286,9 +286,10 @@ services:
     database: Websupport MySQL
     auto_deploy: >
       GitHub Actions (.github/workflows/deploy.yml) runs the test suite on
-      every push to main, then invokes /opt/apps/memory-puzzle-game-deploy.sh
-      with a dedicated command-restricted SSH key. The server performs a
-      forward-only pull, npm ci, Next.js production build, and PM2 restart.
+      every push to main, builds a Next.js standalone release on the runner,
+      then streams that release to /opt/apps/memory-puzzle-game-deploy.sh with
+      a dedicated command-restricted SSH key. The server validates the commit
+      and archive, switches releases, checks readiness, and restarts PM2.
     env_keys:
       - DATABASE_URL
       - SHADOW_DATABASE_URL
