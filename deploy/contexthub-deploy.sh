@@ -16,3 +16,4 @@ git merge --ff-only origin/main
 test -s index.html
 test -s styles.css
 test -s script.js
+test -s favicon.svg
