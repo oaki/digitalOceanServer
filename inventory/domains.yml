@@ -159,3 +159,11 @@ domains:
     notes: >
       Cloudflare A record points to 165.22.16.160 with proxy off. Next.js is
       managed by PM2 and uses the existing Websupport MySQL database.
+
+  - domain: contexthub.uk
+    routes_to: "static_site: contexthub"
+    droplet_serving: new
+    tls: letsencrypt, cert "contexthub.uk", issued 2026-10-13, expires 2027-01-11, HTTP/2 enabled
+    notes: >
+      Apex Cloudflare A record points to 165.22.16.160 with proxy off. Static
+      dashboard links to the ContextHub learning apps and Chess Analysis.

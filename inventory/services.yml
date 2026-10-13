@@ -320,6 +320,16 @@ systemd_services:
       by /etc/sysctl.d/99-livekit.conf.
 
 static_sites:
+  - name: contexthub
+    dir: contexthub
+    repo: https://github.com/oaki/contexthub.git
+    build_output: repository root
+    domain: contexthub.uk
+    auto_deploy: >
+      GitHub Actions validates every push to main, then invokes
+      /opt/apps/contexthub-deploy.sh through its own command-restricted SSH
+      key.
+
   - name: abakus
     dir: abakus
     repo: https://github.com/oaki/abakus.git
