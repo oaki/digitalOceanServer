@@ -37,7 +37,7 @@ node_interpreters:
   chess-analysis-v3-api: /root/.nvm/versions/node/v24.18.1/bin/node   # runs TypeScript via --import tsx (deploy/ecosystem.config.cjs)
   chess-analysis-v3-worker: /root/.nvm/versions/node/v24.18.1/bin/node
 
-next_free_port: 3008  # 3005-3006 video-call, 3007 chess-analysis-v3-api
+next_free_port: 3009  # 3005-3006 video-call, 3007 chess-analysis-v3-api, 3008 memory-puzzle-game
 
 services:
   - name: server
@@ -277,6 +277,31 @@ services:
       the API over ws://127.0.0.1:3007/v1/workers/connect. Registered as
       platform worker "droplet-1".
 
+  - name: memory-puzzle-game
+    dir: memory-puzzle-game
+    repo: git@github-memory-puzzle-game:oaki/memory-puzzle-game.git
+    port: 3008
+    domain: memory-puzzle-game3.contexthub.uk
+    node_interpreter: /root/.nvm/versions/node/v24.18.1/bin/node
+    database: Websupport MySQL
+    auto_deploy: >
+      GitHub Actions (.github/workflows/deploy.yml) runs the test suite on
+      every push to main, then invokes /opt/apps/memory-puzzle-game-deploy.sh
+      with a dedicated command-restricted SSH key. The server performs a
+      forward-only pull, npm ci, Next.js production build, and PM2 restart.
+    env_keys:
+      - DATABASE_URL
+      - SHADOW_DATABASE_URL
+      - SESSION_SECRET
+      - SANIO_AUTH_URL
+      - SANIO_CLIENT_ID
+      - APP_BASE_URL
+      - BLOB_READ_WRITE_TOKEN
+    notes: >
+      Deployed and externally verified 2026-10-13. SanioAuth client
+      memory-puzzle-game allows the production callback on this domain.
+      The Droplet can connect to the existing Websupport database.
+
 systemd_services:
   - name: videocall-livekit
     binary: /usr/local/bin/livekit-server
@@ -295,6 +320,24 @@ systemd_services:
       by /etc/sysctl.d/99-livekit.conf.
 
 static_sites:
+  - name: abakus
+    dir: abakus
+    repo: https://github.com/oaki/abakus.git
+    build_output: dist
+    domain: abakus.contexthub.uk
+    auto_deploy: >
+      GitHub Actions builds every push to main, then invokes
+      /opt/apps/abakus-deploy.sh through its own command-restricted SSH key.
+
+  - name: saskamath
+    dir: saskamath
+    repo: git@github-saskamath:oaki/saskaMath.git
+    build_output: dist
+    domain: math.contexthub.uk
+    auto_deploy: >
+      GitHub Actions builds every push to main, then invokes
+      /opt/apps/saskamath-deploy.sh through its own command-restricted SSH key.
+
   - name: chess-analysis-v3-web
     dir: chess-analysis-v3/apps/web
     repo: git@github.com:oaki/chess-analysis-v3.git
