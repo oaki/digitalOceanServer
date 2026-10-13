@@ -79,7 +79,8 @@ module.exports = {
 };
 EOF
 
-pm2 startOrRestart "$RUNTIME_CONFIG" --update-env >/dev/null
+pm2 delete memory-puzzle-game >/dev/null 2>&1 || true
+pm2 start "$RUNTIME_CONFIG" --update-env >/dev/null
 ready=0
 for _ in $(seq 1 30); do
   if curl -fsS -o /dev/null http://127.0.0.1:3008/; then ready=1; break; fi
@@ -90,7 +91,8 @@ if (( ! ready )); then
   if [[ -n "$previous_target" && -d "$previous_target" ]]; then
     ln -s "$previous_target" "$work/previous"
     mv -Tf "$work/previous" "$CURRENT"
-    pm2 startOrRestart "$RUNTIME_CONFIG" --update-env >/dev/null || true
+    pm2 delete memory-puzzle-game >/dev/null 2>&1 || true
+    pm2 start "$RUNTIME_CONFIG" --update-env >/dev/null || true
   else
     rm -f "$CURRENT"
     pm2 delete memory-puzzle-game >/dev/null 2>&1 || true
