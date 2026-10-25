@@ -37,7 +37,7 @@ node_interpreters:
   chess-analysis-v3-api: /root/.nvm/versions/node/v24.18.1/bin/node   # runs TypeScript via --import tsx (deploy/ecosystem.config.cjs)
   chess-analysis-v3-worker: /root/.nvm/versions/node/v24.18.1/bin/node
 
-next_free_port: 3009  # 3005-3006 video-call, 3007 chess-analysis-v3-api, 3008 memory-puzzle-game
+next_free_port: 3010  # 3005-3006 video-call, 3007 chess-analysis-v3-api, 3008 memory-puzzle-game, 3009 umami
 
 services:
   - name: server
@@ -302,6 +302,29 @@ services:
       Deployed and externally verified 2026-10-13. SanioAuth client
       memory-puzzle-game allows the production callback on this domain.
       The Droplet can connect to the existing Websupport database.
+
+  - name: umami
+    dir: umami   # current -> releases/<tag>, .env, .admin-password, .api-key
+    repo: https://github.com/umami-software/umami.git   # upstream, built locally - no clone on the droplet
+    version: v3.4.1
+    port: 3009
+    domain: analytics.saniolabs.com
+    node_interpreter: /root/.nvm/versions/node/v24.18.1/bin/node
+    pm2_config: /opt/apps/umami/ecosystem.config.cjs (written by scripts/deploy-umami.sh)
+    database: local PostgreSQL 16, database and role umami
+    deployment: >
+      scripts/deploy-umami.sh TAG builds in a local linux/amd64 container and
+      uploads the release; the droplet never builds (ADR-0012). Runbook:
+      docs/analytics.md.
+    env_keys:
+      - DATABASE_URL
+      - APP_SECRET
+      - CLIENT_IP_HEADER
+      - DISABLE_TELEMETRY
+    notes: >
+      Deployed 2026-10-25. Web analytics for all sites; tracked sites in
+      inventory/analytics.yml. Heap capped at 256 MB, PM2 restarts above
+      400 MB RSS.
 
 systemd_services:
   - name: videocall-livekit

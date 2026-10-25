@@ -11,8 +11,10 @@ knowledge as unstructured prose with no tracked state.
 - **[docs/](./docs/)** — runbooks: connecting, deploying a service, deploying
   a static site, adding a domain, adding a mail alias, common operations
 - **[docs/adr/](./docs/adr/)** — why things are set up this way
+- **[docs/analytics.md](./docs/analytics.md)** - self-hosted Umami at
+  analytics.saniolabs.com: add analytics to a site, upgrade Umami
 - **[inventory/](./inventory/)** — current state as data: `services.yml`,
-  `domains.yml`, `mail-aliases.yml`
+  `domains.yml`, `mail-aliases.yml`, `analytics.yml`
 - **[scripts/](./scripts/)** — local bash scripts wrapping SSH to actually
   make changes (nothing is installed on the droplet itself)
 

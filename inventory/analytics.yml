@@ -1,0 +1,19 @@
+# Websites tracked by the self-hosted Umami instance. See docs/analytics.md.
+#
+# Adding a website: scripts/add-analytics-site.sh DOMAIN (appends an entry
+# here), then put the printed <script> tag into the site's own repo and fill
+# in snippet_in. website_id is public (it ships in every page's HTML), so it
+# is fine to keep here; the API key and admin password are not, they stay on
+# the droplet in /opt/apps/umami/.
+
+umami:
+  url: https://analytics.saniolabs.com
+  service: umami   # inventory/services.yml
+  version: v3.4.1
+  tracker: https://analytics.saniolabs.com/script.js
+
+websites:
+  - domain: chess-analysis.com
+    website_id: 1e34aea4-cb79-494e-a587-1c50c5b7e365
+    added: 2026-10-25
+    snippet_in: TODO   # repo + file where the <script> tag lives

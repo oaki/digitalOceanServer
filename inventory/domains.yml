@@ -167,3 +167,13 @@ domains:
     notes: >
       Apex Cloudflare A record points to 165.22.16.160 with proxy off. Static
       dashboard links to the ContextHub learning apps and Chess Analysis.
+
+  - domain: analytics.saniolabs.com
+    routes_to: "service: umami (port 3009)"
+    droplet_serving: pending-dns
+    tls: pending - certbot runs once the A record resolves
+    notes: >
+      saniolabs.com DNS is at Websupport (ns1-3.websupport.sk); the apex is
+      hosted there (31.43.16x.6), not on this droplet, so only this
+      subdomain is tracked here and no billing entry applies. Needs an A
+      record analytics -> 165.22.16.160, added manually by the owner.
