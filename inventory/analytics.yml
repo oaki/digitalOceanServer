@@ -16,15 +16,15 @@ websites:
   - domain: chess-analysis.com
     website_id: 1e34aea4-cb79-494e-a587-1c50c5b7e365
     added: 2026-10-25
-    snippet_in: TODO   # repo + file where the <script> tag lives
+    snippet_in: "chess-analysis-v3: apps/web/src/components/shell/Document.tsx"
   - domain: baromio.io
     website_id: 6865f687-db2b-4487-adf1-4885dbf7a230
     added: 2026-10-25
-    snippet_in: TODO   # repo + file where the <script> tag lives
+    snippet_in: "chess-analysis-v3: apps/web/src/components/shell/Document.tsx"
   - domain: baromio.io
     website_id: 6865f687-db2b-4487-adf1-4885dbf7a230
     added: 2026-10-25
-    snippet_in: "pulseGuard (Laravel): resources/views/partials/umami.blade.php, branch umami-analytics, not deployed yet"
+    snippet_in: "pulseGuard (Laravel): resources/views/partials/umami.blade.php, deployed 2026-10-25 as v3.30.0"
     hosting: Websupport via FTP release flow (not this droplet), DNS on Cloudflare
     events: [sign_up, first_monitor_created, upgrade, cta_register_click]   # fired from partials/analytics-event.blade.php
     goals:   # created through the API, see docs/analytics.md "Goals and funnels"
