@@ -17,3 +17,24 @@ websites:
     website_id: 1e34aea4-cb79-494e-a587-1c50c5b7e365
     added: 2026-10-25
     snippet_in: TODO   # repo + file where the <script> tag lives
+  - domain: baromio.io
+    website_id: 6865f687-db2b-4487-adf1-4885dbf7a230
+    added: 2026-10-25
+    snippet_in: TODO   # repo + file where the <script> tag lives
+  - domain: baromio.io
+    website_id: 6865f687-db2b-4487-adf1-4885dbf7a230
+    added: 2026-10-25
+    snippet_in: "pulseGuard (Laravel): resources/views/partials/umami.blade.php, branch umami-analytics, not deployed yet"
+    hosting: Websupport via FTP release flow (not this droplet), DNS on Cloudflare
+    events: [sign_up, first_monitor_created, upgrade, cta_register_click]   # fired from partials/analytics-event.blade.php
+    goals:   # created through the API, see docs/analytics.md "Goals and funnels"
+      - Sign-up (event sign_up)
+      - First monitor created (event first_monitor_created)
+      - Upgrade to paid (event upgrade)
+      - Clicked register CTA (event cta_register_click)
+      - Reached register page (path */register)
+      - Viewed pricing (path */pricing)
+      - Viewed AI agents / MCP (path */ai-agents)
+    funnels:
+      - Signup to paid: */register, sign_up, first_monitor_created, upgrade (30 days)
+      - Pricing to sign-up: */pricing, */register, sign_up (24 hours)

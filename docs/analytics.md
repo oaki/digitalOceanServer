@@ -82,6 +82,39 @@ Totals for the last 7 days (`startAt`/`endAt` are Unix milliseconds):
 ssh -i ~/.ssh/id_ed25519 root@165.22.16.160 'end=$(date +%s000); start=$((end - 7*86400000)); curl -s -H "Authorization: Bearer $(cat /opt/apps/umami/.api-key)" "http://127.0.0.1:3009/api/websites/WEBSITE_ID/stats?startAt=$start&endAt=$end"'
 ```
 
+## Goals and funnels (conversions)
+
+A goal counts visitors who did something; a funnel shows where they drop out
+between steps. Both are created with the API wrapper
+`scripts/umami-api.sh METHOD /path [JSON_FILE]`, e.g.:
+
+```bash
+echo '{"name":"Sign-up","parameters":{"type":"event","value":"sign_up"}}' > /tmp/goal.json
+scripts/umami-api.sh POST /websites/WEBSITE_ID/goals /tmp/goal.json
+```
+
+- `type` is `event` (a custom event fired with `umami.track('name')` or
+  `data-umami-event="name"`) or `path` (a page view). A leading or trailing
+  `*` is a wildcard, so `*/register` matches `/en/register` and `/sk/register`.
+- Funnel steps are 2 to 8 of `{"type":"path"|"event","value":"..."}`, with
+  `window` in minutes.
+- Pick conversions that follow the money: visit, sign-up, activation,
+  payment. Count the event the site's own database also records, so the two
+  can be reconciled. Pageview goals (pricing, register) cover the steps
+  before any event exists.
+
+## Other agents and tools
+
+- **Another Claude Code session on this Mac:** the `web-analytics` skill and
+  this repo are enough; nothing to configure.
+- **Scripts and other agents over HTTP:** create a key in the UI under
+  Settings, API keys, and send `Authorization: Bearer umami_...` to
+  `https://analytics.saniolabs.com/api/...`. Keys cannot touch users, admin
+  or password routes.
+- **MCP:** Umami has a remote MCP endpoint at `/mcp`, off by default. It is
+  enabled by `MCP_ENABLED=1` in `/opt/apps/umami/.env` plus
+  `pm2 restart umami`, and authenticates with an API key.
+
 ## Upgrading Umami
 
 ```bash
