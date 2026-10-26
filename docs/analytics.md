@@ -111,9 +111,13 @@ scripts/umami-api.sh POST /websites/WEBSITE_ID/goals /tmp/goal.json
   Settings, API keys, and send `Authorization: Bearer umami_...` to
   `https://analytics.saniolabs.com/api/...`. Keys cannot touch users, admin
   or password routes.
-- **MCP:** Umami has a remote MCP endpoint at `/mcp`, off by default. It is
-  enabled by `MCP_ENABLED=1` in `/opt/apps/umami/.env` plus
-  `pm2 restart umami`, and authenticates with an API key.
+- **MCP:** enabled since 2026-10-26 (`MCP_ENABLED=1` in
+  `/opt/apps/umami/.env`). Endpoint `https://analytics.saniolabs.com/mcp`
+  (Streamable HTTP), authenticated with an API key as bearer token; the
+  tools go through the normal API, so a key sees only what its user sees.
+  Give each agent its own key (Settings, API keys) so it can be revoked
+  alone. Claude Code: `claude mcp add --transport http umami
+  https://analytics.saniolabs.com/mcp --header "Authorization: Bearer KEY"`.
 
 ## Upgrading Umami
 
