@@ -39,6 +39,9 @@ node_interpreters:
 
 next_free_port: 3010  # 3005-3006 video-call, 3007 chess-analysis-v3-api, 3008 memory-puzzle-game, 3009 umami
 
+# STOPPED 2026-10-31 (pm2 stop + save): server (chess-analysis-api-blue/green) and worker1,
+# i.e. api.chess-analysis.com returns 502. Planned deletion and cleanup around 2026-11-30
+# if nothing breaks. Do not redeploy before then unless rolling back (pm2 start + pm2 save).
 services:
   - name: server
     dir: chess-analysis-api
@@ -272,7 +275,7 @@ services:
       - SYZYGY_PATH
       - SYZYGY_PIECES
     notes: >
-      Platform analysis worker (Stockfish 16 from apt, 1 thread, 128 MB hash,
+      Platform analysis worker (Stockfish 19 at /opt/stockfish/current -> /opt/stockfish/19; apt Stockfish 16 purged 2026-10-31, 1 thread, 64 MB hash (lowered from 128 on 2026-10-30 to save RAM),
       Syzygy 5-piece tables shared with v2 at /opt/apps/syzygy). Connects to
       the API over ws://127.0.0.1:3007/v1/workers/connect. Registered as
       platform worker "droplet-1".
@@ -411,7 +414,9 @@ static_sites:
 # Ubuntu 22.04/24.04 (jammy/noble) — the ondrej/php PPA publishes nothing
 # for older releases.
 php_installed: true   # PHP 8.3.33 via ondrej PPA, installed 2026-07-31 on the new droplet (165.22.16.160)
-php_shared_pool_socket: /run/php/php8.3-fpm.sock
+# php8.3-fpm purged 2026-10-30 (no site used it); only php8.4-fpm runs, php8.3-cli stays.
+# To use the shared pool again, reinstall php8.3-fpm (docs/deploying-a-php-site.md).
+php_shared_pool_socket: null
 
 php_sites:
   - name: siebi.sk
