@@ -36,13 +36,32 @@ node_interpreters:
   videocall-web: /root/.nvm/versions/node/v24.18.1/bin/node
   chess-analysis-v3-api: /root/.nvm/versions/node/v24.18.1/bin/node   # runs TypeScript via --import tsx (deploy/ecosystem.config.cjs)
   chess-analysis-v3-worker: /root/.nvm/versions/node/v24.18.1/bin/node
+  english-together: /root/.nvm/versions/node/v24.18.1/bin/node
 
-next_free_port: 3010  # 3005-3006 video-call, 3007 chess-analysis-v3-api, 3008 memory-puzzle-game, 3009 umami
+next_free_port: 3011  # 3010 english-together
 
 # STOPPED 2026-10-31 (pm2 stop + save): server (chess-analysis-api-blue/green) and worker1,
 # i.e. api.chess-analysis.com returns 502. Planned deletion and cleanup around 2026-11-30
 # if nothing breaks. Do not redeploy before then unless rolling back (pm2 start + pm2 save).
 services:
+  - name: english-together
+    dir: english-together
+    repo: git@github-english-together:oaki/English_Together.git
+    port: 3010
+    domain: english-together.contexthub.uk
+    node_interpreter: /root/.nvm/versions/node/v24.18.1/bin/node
+    auto_deploy: >
+      GitHub Actions (.github/workflows/deploy.yml) builds a Next.js
+      standalone release on every push to main and streams it through a
+      dedicated command-restricted SSH key to
+      /opt/apps/english-together-deploy.sh. The server verifies the commit,
+      checks readiness, and restarts PM2.
+    env_keys: []
+    notes: >
+      Initial landing page. Runtime .env exists but is empty; populate it
+      as real application integrations are implemented. Read-only GitHub
+      deploy key on the droplet uses the github-english-together SSH alias.
+
   - name: server
     dir: chess-analysis-api
     repo: https://github.com/oaki/chess-analysis-api.git
