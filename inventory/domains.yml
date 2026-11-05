@@ -173,11 +173,10 @@ domains:
     droplet_serving: new
     tls: letsencrypt, cert "english-together.contexthub.uk", issued 2026-11-05, expires 2027-02-03
     notes: >
-      Cloudflare proxy is on as of 2026-11-05 (A queries return Cloudflare
-      edge IPs). HTTPS was verified through Cloudflare and directly against
-      origin 165.22.16.160; HTTP redirects to HTTPS. Other ContextHub
-      subdomains use DNS only, so switching this record to DNS only later
-      would make its routing consistent with them.
+      Cloudflare A record points directly to 165.22.16.160 with proxy off.
+      HTTPS was verified directly against the origin; HTTP redirects to
+      HTTPS. Some public resolvers may briefly retain the earlier proxied
+      answer while DNS caches expire.
 
   - domain: analytics.saniolabs.com
     routes_to: "service: umami (port 3009)"
