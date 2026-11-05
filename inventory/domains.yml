@@ -170,12 +170,14 @@ domains:
 
   - domain: english-together.contexthub.uk
     routes_to: "service: english-together (port 3010)"
-    droplet_serving: pending-dns
-    tls: pending - issue the Let's Encrypt certificate after the A record resolves
+    droplet_serving: new
+    tls: letsencrypt, cert "english-together.contexthub.uk", issued 2026-11-05, expires 2027-02-03
     notes: >
-      Add an A record for english-together pointing to 165.22.16.160 in
-      Cloudflare DNS with proxy off. The HTTP nginx vhost is installed;
-      HTTPS follows DNS propagation and Certbot issuance.
+      Cloudflare proxy is on as of 2026-11-05 (A queries return Cloudflare
+      edge IPs). HTTPS was verified through Cloudflare and directly against
+      origin 165.22.16.160; HTTP redirects to HTTPS. Other ContextHub
+      subdomains use DNS only, so switching this record to DNS only later
+      would make its routing consistent with them.
 
   - domain: analytics.saniolabs.com
     routes_to: "service: umami (port 3009)"
