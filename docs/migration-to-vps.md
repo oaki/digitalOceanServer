@@ -2,7 +2,7 @@
 
 Presun všetkého z Droplet (`165.22.16.160`, 1 vCPU, 2 GB RAM) na VPS (`187.7.19.10`, Hostinger, 4 vCPU, 15 GB RAM, 193 GB disk). Rozhodnutia a ich dôvody: [ADR-0013](adr/0013-migrate-droplet-to-hostinger-vps.md). Pojmy: [CONTEXT.md](../CONTEXT.md) (VPS, Droplet, Cutover).
 
-Stav plánu: navrhnutý 2026-11-20, nič z neho sa zatiaľ nevykonalo. VPS je čistý Ubuntu 26.04.1 (len `sshd`, Monarx, bez firewallu, `/opt` prázdny).
+Stav (2026-11-20): VPS je nainštalovaný a overený cez `curl --resolve` pre vlny 1-3 (bez `memory-puzzle-game`), 5 a 6. **Cutover hotový: vlna 1** (`contexthub.uk`, `abakus`, `math`, CI repá `contexthub`, `abakus`, `saskaMath` presmerované; deploy `saskaMath` zlyháva na limite rozpočtu GitHub Actions, nie na migrácii) a `api.contexthub.uk` z vlny 3. Čaká: DNS v DigitalOcean a Websupport (vyžaduje prihlásenie), R2 záznamy záloh pred prvou produkčnou databázou.
 
 ## Rozhodnutia v skratke
 
@@ -10,7 +10,7 @@ Stav plánu: navrhnutý 2026-11-20, nič z neho sa zatiaľ nevykonalo. VPS je č
 |---|---|
 | OS | Ubuntu 26.04 (zostáva, bez reinštalácie na 24.04) |
 | PostgreSQL | 16 z PGDG (rovnaká hlavná verzia ako na Droplet) |
-| PHP | 8.4 z ondrej PPA (vetva `resolute` existuje) |
+| PHP | 8.5 z archívu Ubuntu 26.04 (ondrej PPA má pre `resolute` prázdny index balíkov, overené 2026-11-20) |
 | Cutover | Postupne po službách, DNS po jednej doméne, Droplet ostáva nedotknutý ako rollback |
 | CI | Vo workflow sa zmení IP na `187.7.19.10` pri Cutoveri daného repa |
 | Certifikáty | Kópia `/etc/letsencrypt` z Droplet pred Cutoverom |
@@ -46,7 +46,7 @@ Stav plánu: navrhnutý 2026-11-20, nič z neho sa zatiaľ nevykonalo. VPS je č
 |---|---|
 | nginx, certbot + `python3-certbot-nginx`, git, redis-server, postfix, age, sysstat, mariadb-client-core | `apt` z archívu 26.04 |
 | PostgreSQL 16 | PGDG repozitár (`resolute-pgdg`), balík `postgresql-16`; `shared_buffers` a `max_connections` ladiť až po migrácii |
-| PHP 8.4 | ondrej PPA, `php8.4-fpm` + `cli`, `mbstring`, `xml`, `curl`, `gd`, `intl`, `mysql`, `sqlite3`, `bcmath`, `zip`; `composer`; pool `siebi.conf` skopírovať z Droplet |
+| PHP 8.5 | Archív Ubuntu: `php8.5-fpm` + `cli`, `mbstring`, `xml`, `curl`, `gd`, `intl`, `mysql`, `sqlite3`, `bcmath`, `zip`; `composer`; pool `siebi.conf` skopírovaný z Droplet a upravený na `php8.5-fpm-siebi.sock` |
 | Node | `nvm`, Node 24.18.1 (rovnaká verzia ako na Droplet), `pm2@7.0.3`, `corepack` (pnpm); `pm2 startup` s `PATH` obsahujúcim nvm bin |
 | LiveKit | binárka `livekit-server` 1.13.7 do `/usr/local/bin`, používateľ `livekit`, `/etc/sysctl.d/99-livekit.conf` (rmem/wmem 5000000) |
 | Stockfish 19 | `/opt/stockfish/19` + symlink `current`, binárku skopírovať z Droplet (apt má len 17) |
