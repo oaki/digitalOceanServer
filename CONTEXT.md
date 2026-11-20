@@ -1,17 +1,34 @@
 # Droplet Infrastructure
 
-Domain glossary for managing the single Ubuntu droplet (`165.22.16.160`) that hosts
-chess-analysis.com and related projects. This repo is the source of truth for what
+Domain glossary for managing the single Ubuntu server that hosts
+chess-analysis.com and related projects: the Droplet (`165.22.16.160`) until the
+migration finishes, the VPS (`187.7.19.10`) afterwards. This repo is the source of truth for what
 runs on the droplet and how to change it — see `docs/` for runbooks, `inventory/`
 for current state, `scripts/` for automation. It replaces the old `droplet` Claude
 skill, which duplicated this knowledge in prose with no structured state.
 
 ## Language
 
-**Droplet**:
-The single Ubuntu 24.04 server at `165.22.16.160` that hosts every Service, Static
-Site, Domain, and Mail Alias tracked in this repo.
+**VPS**:
+The single server (Hostinger, `187.7.19.10`) that is the target home of every
+Service, Static Site, PHP Site, Domain, and Mail Alias tracked in this repo. It
+becomes the only server once the migration off the Droplet completes.
 _Avoid_: server (collides with the PM2 process literally named `server`), host, box.
+
+**Droplet**:
+The old DigitalOcean server at `165.22.16.160` that hosts everything until it is
+moved to the VPS. A transitional term: it stops being valid, and is removed from
+this glossary, once the last Domain is served by the VPS. Until then, "the
+server" in older docs means the Droplet.
+_Avoid_: using it for the VPS — the VPS is not a DigitalOcean droplet.
+
+**Cutover**:
+Switching one Service or Static Site's Domain from the Droplet to the VPS by
+changing its DNS record, after the VPS copy has been verified. Done one Service
+at a time, never all at once; the Droplet stays untouched so a Cutover can be
+reversed by pointing DNS back.
+_Avoid_: migration (that is the whole programme of moving everything; a Cutover
+is one step of it).
 
 **Service**:
 A long-running Node.js process managed by PM2 on the droplet, reverse-proxied by
