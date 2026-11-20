@@ -2,7 +2,7 @@
 
 Presun všetkého z Droplet (`165.22.16.160`, 1 vCPU, 2 GB RAM) na VPS (`187.7.19.10`, Hostinger, 4 vCPU, 15 GB RAM, 193 GB disk). Rozhodnutia a ich dôvody: [ADR-0013](adr/0013-migrate-droplet-to-hostinger-vps.md). Pojmy: [CONTEXT.md](../CONTEXT.md) (VPS, Droplet, Cutover).
 
-Stav (2026-11-20): VPS je nainštalovaný a overený cez `curl --resolve` pre vlny 1-3 (bez `memory-puzzle-game`), 5 a 6. **Cutover hotový: vlna 1** (`contexthub.uk`, `abakus`, `math`, CI repá `contexthub`, `abakus`, `saskaMath` presmerované; deploy `saskaMath` zlyháva na limite rozpočtu GitHub Actions, nie na migrácii) a `api.contexthub.uk` z vlny 3. Čaká: DNS v DigitalOcean a Websupport (vyžaduje prihlásenie), R2 záznamy záloh pred prvou produkčnou databázou.
+Stav (2026-11-20): VPS je nainštalovaný, zálohy do R2 bežia ([backups.md](backups.md)). **Cutover hotový:** vlna 1 (`contexthub.uk`, `abakus`, `math`), `api.contexthub.uk`, `english-together.contexthub.uk` (DB a cron voice-limit presunuté, počty riadkov identické) a `call.contexthub.uk` (videocall, LiveKit, DB `videocall`; reálny hovor medzi dvoma zariadeniami ešte neoverený). CI repá `contexthub`, `abakus`, `saskaMath`, `English_Together` majú novú IP; ich deploy zlyháva na limite rozpočtu GitHub Actions, nie na migrácii. **Čaká:** DNS v DigitalOcean (pulseguard, `chess-analysis.com`, v3) a Websupport (`siebi.sk`, `analytics.saniolabs.com`, MySQL pre `memory-puzzle-game`), kde treba prihlásenie.
 
 ## Rozhodnutia v skratke
 
