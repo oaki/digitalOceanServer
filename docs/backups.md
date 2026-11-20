@@ -22,4 +22,4 @@ age -d -i ~/.config/vps-backup-age/key.txt pg_<db>_<čas>.dump.age > db.dump
 pg_restore --clean --if-exists --no-owner -d <db> db.dump
 ```
 
-Overené 2026-11-20: dump `videocall` z R2 sa odšifroval kľúčom z Macu a je platný PostgreSQL dump (v1.15). Plný restore do dočasnej databázy sa urobí pred vypnutím Droplet (plán, Fáza 5, bod 4).
+Overené 2026-11-20: dump `videocall` z R2 sa odšifroval kľúčom z Macu a je platný PostgreSQL dump (v1.15). **Plný restore overený 2026-11-20:** dump `chess_v3` (145 MB zašifrovaný) sa odšifroval kľúčom z Macu a obnovil do dočasnej databázy: rovnaké schémy a počty tabuliek (9 + 105 + 6) aj veľkosť (1052 MB) ako živá databáza. Zostáva overiť, že nočný cron (03:15 UTC) naozaj prebehol (`/var/log/vps-backup.log`).
