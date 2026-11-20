@@ -17,7 +17,7 @@ running these steps by hand — it does the same thing, reading/writing
    avoids leaking secret values into shell history or process listings on
    either end):
    ```bash
-   scp -i ~/.ssh/id_ed25519 LOCAL_ENV_FILE root@165.22.16.160:/opt/apps/SERVICE_NAME/.env
+   scp -i ~/.ssh/id_ed25519 LOCAL_ENV_FILE root@187.7.19.10:/opt/apps/SERVICE_NAME/.env
    ```
 4. **Start with PM2:**
    ```bash

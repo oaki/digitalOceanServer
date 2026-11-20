@@ -19,7 +19,7 @@ website profile in it. Why it is built and run this way:
 Read the admin password without printing it into a shared log:
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 root@165.22.16.160 "cat /opt/apps/umami/.admin-password" | pbcopy
+ssh -i ~/.ssh/id_ed25519 root@187.7.19.10 "cat /opt/apps/umami/.admin-password" | pbcopy
 ```
 
 ## Add analytics to a site
@@ -71,7 +71,7 @@ Then open the site in a browser without an ad blocker and watch the
 dashboard's realtime view, or ask the API for active visitors:
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 root@165.22.16.160 'curl -s -H "Authorization: Bearer $(cat /opt/apps/umami/.api-key)" http://127.0.0.1:3009/api/websites/WEBSITE_ID/active'
+ssh -i ~/.ssh/id_ed25519 root@187.7.19.10 'curl -s -H "Authorization: Bearer $(cat /opt/apps/umami/.api-key)" http://127.0.0.1:3009/api/websites/WEBSITE_ID/active'
 ```
 
 ### Reading stats
@@ -79,7 +79,7 @@ ssh -i ~/.ssh/id_ed25519 root@165.22.16.160 'curl -s -H "Authorization: Bearer $
 Totals for the last 7 days (`startAt`/`endAt` are Unix milliseconds):
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 root@165.22.16.160 'end=$(date +%s000); start=$((end - 7*86400000)); curl -s -H "Authorization: Bearer $(cat /opt/apps/umami/.api-key)" "http://127.0.0.1:3009/api/websites/WEBSITE_ID/stats?startAt=$start&endAt=$end"'
+ssh -i ~/.ssh/id_ed25519 root@187.7.19.10 'end=$(date +%s000); start=$((end - 7*86400000)); curl -s -H "Authorization: Bearer $(cat /opt/apps/umami/.api-key)" "http://127.0.0.1:3009/api/websites/WEBSITE_ID/stats?startAt=$start&endAt=$end"'
 ```
 
 ## Goals and funnels (conversions)
@@ -146,7 +146,7 @@ does not roll the schema back.
    (`{"name": "add-analytics-site"}`) and store the returned `key` in
    `.api-key` (mode 600). It is shown only once. API keys cannot reach
    `/api/users`, `/api/admin`, `/api/auth` or password routes.
-5. DNS: A record `analytics` -> `165.22.16.160` at Websupport (owner adds it
+5. DNS: A record `analytics` -> `187.7.19.10` at Websupport (owner adds it
    manually, see ADR-0002).
 6. nginx: port-80 vhost proxying to `127.0.0.1:3009`, then
    `certbot --nginx -d analytics.saniolabs.com --redirect`, then `http2`

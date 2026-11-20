@@ -81,7 +81,7 @@ ssh_run "install -d -m 700 $APP_DIR/releases"
 for attempt in 1 2 3; do
   rsync --partial --timeout=60 --stats \
     -e "ssh ${SSH_OPTS[*]} -o ServerAliveInterval=15 -o ServerAliveCountMax=4" \
-    "$RELEASE" "$DROPLET_HOST:$APP_DIR/releases/umami-$TAG.tgz" && break
+    "$RELEASE" "$VPS_HOST:$APP_DIR/releases/umami-$TAG.tgz" && break
   [ "$attempt" = 3 ] && { echo "upload failed 3 times" >&2; exit 1; }
   echo "upload attempt $attempt failed, retrying" >&2
 done

@@ -1,8 +1,8 @@
 # digitalOceanServer
 
-Infrastructure documentation & scripts for the DigitalOcean droplet at
-`165.22.16.160` (Ubuntu 24.04, hosts chess-analysis.com and related
-projects). This repo is the source of truth for what runs there and how to
+Infrastructure documentation & scripts for the Hostinger VPS at
+`187.7.19.10` (Ubuntu 26.04, hosts chess-analysis.com and related
+projects; migrated from the DigitalOcean Droplet, see ADR-0013). This repo is the source of truth for what runs there and how to
 change it — it replaced the old `droplet` Claude skill, which held the same
 knowledge as unstructured prose with no tracked state.
 

@@ -21,7 +21,7 @@ NAME="${2:-$DOMAIN}"
 UMAMI_URL="https://analytics.saniolabs.com"
 ANALYTICS_YML="$REPO_ROOT/inventory/analytics.yml"
 
-website_id="$(ssh "${SSH_OPTS[@]}" "$DROPLET_HOST" \
+website_id="$(ssh "${SSH_OPTS[@]}" "$VPS_HOST" \
   "DOMAIN='$DOMAIN' NAME='$NAME' /root/.nvm/versions/node/v24.18.1/bin/node -" <<'JS'
 const fs = require('node:fs');
 const key = fs.readFileSync('/opt/apps/umami/.api-key', 'utf8').trim();

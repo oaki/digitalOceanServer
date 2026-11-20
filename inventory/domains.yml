@@ -2,15 +2,15 @@
 # managed manually by the owner outside this repo — see
 # docs/adr/0002-manual-dns-management.md and docs/adding-a-domain.md.
 #
-# Mid-migration as of 2026-07-31: see docs/adr/0008-migrate-droplet-142-to-165.md.
-# Cutover is staged per-domain, not atomic — droplet_serving reflects where
-# a domain's DNS *actually* points right now (verified live via dig), which
-# may lag what inventory/services.yml says is deployed. The old droplet
-# (142.93.166.76) is only safe to delete once every row below says "new".
+# Migration to the Hostinger VPS, 2026-11-20: see docs/adr/0013-migrate-droplet-to-hostinger-vps.md
+# and docs/migration-to-vps.md. droplet_serving keeps its old key name:
+#   new = served by the VPS (187.7.19.10)   old = still on the Droplet (165.22.16.160)
+# It reflects where DNS *actually* points (verified via dig). The Droplet is
+# only safe to delete once every row says "new" and the rollback window has passed.
 
 droplets:
-  old: 142.93.166.76   # Ubuntu 20.04, being phased out
-  new: 165.22.16.160    # Ubuntu 24.04, primary target for all new work
+  old: 165.22.16.160   # DigitalOcean Droplet, Ubuntu 24.04, being phased out (rollback target)
+  new: 187.7.19.10     # Hostinger VPS, Ubuntu 26.04, primary target for all work
 
 # billing: only set on the domain's own top-level entry (not on subdomains
 # like api./www./pulseguard-* — those aren't separately registered/billed).
@@ -55,7 +55,7 @@ domains:
     tls: letsencrypt, cert "api.chess-analysis.com" (new droplet, expires 2026-11-16)
     cutover_status: >
       Cut over and externally verified on 2026-09-17. DNS resolves to
-      165.22.16.160. GitHub Actions now deploys with the dedicated restricted
+      187.7.19.10. GitHub Actions now deploys with the dedicated restricted
       key through the blue-green script. The nginx proxy_pass intentionally
       has no trailing slash so request paths reach Hapi unchanged.
 
@@ -126,7 +126,7 @@ domains:
       DNS on Cloudflare nameservers (armfazh.ns.cloudflare.com,
       tess.ns.cloudflare.com) rather than the registrar directly - proxy
       (orange cloud) is OFF for this record, pointing straight at
-      165.22.16.160. If proxy is ever turned back on, Cloudflare SSL/TLS mode
+      187.7.19.10. If proxy is ever turned back on, Cloudflare SSL/TLS mode
       must be "Full (strict)" or the HTTPS redirect will loop.
 
   - domain: call.contexthub.uk
@@ -134,7 +134,7 @@ domains:
     droplet_serving: new
     tls: letsencrypt, cert "call.contexthub.uk", issued 2026-10-04, expires 2027-01-02, HTTP/2 enabled
     notes: >
-      Cloudflare A record points directly to 165.22.16.160 with proxy off.
+      Cloudflare A record points directly to 187.7.19.10 with proxy off.
       Deployed and externally verified on 2026-10-04. nginx routes pages,
       explicit API paths, and LiveKit /rtc signaling on one hostname. LiveKit
       media and TURN also use dedicated public ports recorded in
@@ -144,20 +144,20 @@ domains:
     routes_to: "static_site: abakus"
     droplet_serving: new
     tls: letsencrypt, cert "abakus.contexthub.uk", issued 2026-10-13, expires 2027-01-11, HTTP/2 enabled
-    notes: Cloudflare A record points to 165.22.16.160 with proxy off.
+    notes: Cloudflare A record points to 187.7.19.10 with proxy off.
 
   - domain: math.contexthub.uk
     routes_to: "static_site: saskamath"
     droplet_serving: new
     tls: letsencrypt, cert "math.contexthub.uk", issued 2026-10-13, expires 2027-01-11, HTTP/2 enabled
-    notes: Cloudflare A record points to 165.22.16.160 with proxy off.
+    notes: Cloudflare A record points to 187.7.19.10 with proxy off.
 
   - domain: memory-puzzle-game3.contexthub.uk
     routes_to: "service: memory-puzzle-game (port 3008)"
     droplet_serving: new
     tls: letsencrypt, cert "memory-puzzle-game3.contexthub.uk", issued 2026-10-13, expires 2027-01-11, HTTP/2 enabled
     notes: >
-      Cloudflare A record points to 165.22.16.160 with proxy off. Next.js is
+      Cloudflare A record points to 187.7.19.10 with proxy off. Next.js is
       managed by PM2 and uses the existing Websupport MySQL database.
 
   - domain: contexthub.uk
@@ -165,7 +165,7 @@ domains:
     droplet_serving: new
     tls: letsencrypt, cert "contexthub.uk", issued 2026-10-13, expires 2027-01-11, HTTP/2 enabled
     notes: >
-      Apex Cloudflare A record points to 165.22.16.160 with proxy off. Static
+      Apex Cloudflare A record points to 187.7.19.10 with proxy off. Static
       dashboard links to the ContextHub learning apps and Chess Analysis.
 
   - domain: english-together.contexthub.uk
@@ -173,17 +173,17 @@ domains:
     droplet_serving: new
     tls: letsencrypt, cert "english-together.contexthub.uk", issued 2026-11-05, expires 2027-02-03
     notes: >
-      Cloudflare A record points directly to 165.22.16.160 with proxy off.
+      Cloudflare A record points directly to 187.7.19.10 with proxy off.
       HTTPS was verified directly against the origin; HTTP redirects to
       HTTPS. Some public resolvers may briefly retain the earlier proxied
       answer while DNS caches expire.
 
   - domain: analytics.saniolabs.com
     routes_to: "service: umami (port 3009)"
-    droplet_serving: pending-dns
-    tls: pending - certbot runs once the A record resolves
+    droplet_serving: new
+    tls: letsencrypt, copied from the Droplet 2026-11-20
     notes: >
       saniolabs.com DNS is at Websupport (ns1-3.websupport.sk); the apex is
       hosted there (31.43.16x.6), not on this droplet, so only this
-      subdomain is tracked here and no billing entry applies. Needs an A
-      record analytics -> 165.22.16.160, added manually by the owner.
+      subdomain is tracked here and no billing entry applies. A record
+      analytics -> 187.7.19.10 at Websupport (moved from the Droplet 2026-11-20).

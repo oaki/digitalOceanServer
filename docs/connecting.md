@@ -1,13 +1,13 @@
 # Connecting to the droplet
 
-- **Host:** `root@165.22.16.160`
+- **Host:** `root@187.7.19.10`
 - **SSH key:** `~/.ssh/id_ed25519`
 - **OS:** Ubuntu 24.04 (noble), DigitalOcean Frankfurt (fra1)
 
 Every command runs non-interactively — never open an interactive SSH session:
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "COMMAND"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "COMMAND"
 ```
 
 In practice, use `scripts/lib.sh`'s `ssh_run` function (see `docs/operations.md`

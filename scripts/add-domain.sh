@@ -11,17 +11,17 @@ DOMAIN="${1:?usage: add-domain.sh DOMAIN}"
 
 echo "==> Checking DNS for $DOMAIN"
 resolved="$(dig +short "$DOMAIN" | tail -1)"
-if [ "$resolved" = "165.22.16.160" ]; then
-  echo "OK: $DOMAIN already resolves to 165.22.16.160."
+if [ "$resolved" = "187.7.19.10" ]; then
+  echo "OK: $DOMAIN already resolves to 187.7.19.10."
   echo "Next: run add-service.sh or add-static-site.sh, then update inventory/domains.yml."
 else
-  echo "$DOMAIN resolves to '${resolved:-nothing}', not 165.22.16.160 yet."
+  echo "$DOMAIN resolves to '${resolved:-nothing}', not 187.7.19.10 yet."
   cat <<EOF
 
 Add this record at wherever $DOMAIN's DNS is managed, then re-run this script:
 
   Type: A
   Name: @ (or the subdomain)
-  Value: 165.22.16.160
+  Value: 187.7.19.10
 EOF
 fi

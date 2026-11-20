@@ -55,7 +55,7 @@ and verifies the API, PWA, and LiveKit unit.
 curl -fsS https://call.contexthub.uk/health
 scripts/logs.sh videocall-api
 scripts/logs.sh videocall-web
-ssh -i ~/.ssh/id_ed25519 root@165.22.16.160 \
+ssh -i ~/.ssh/id_ed25519 root@187.7.19.10 \
   "systemctl status videocall-livekit --no-pager"
 ```
 

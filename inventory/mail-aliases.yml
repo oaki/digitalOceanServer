@@ -2,12 +2,12 @@
 # docs/adr/0003-mail-relay-only-no-mailboxes.md). No mail is ever stored on
 # the droplet — every alias forwards immediately to an external mailbox.
 #
-# Installed 2026-07-31 on the NEW droplet (165.22.16.160) for siebi.sk.
+# Installed 2026-07-31 on the NEW droplet (187.7.19.10) for siebi.sk.
 # Not installed on the old droplet (142.93.166.76) — never was needed there.
 
 postfix_installed: true
 postfix_active: true
-postfix_droplet: 165.22.16.160
+postfix_droplet: 187.7.19.10
 
 aliases:
   - address: info@siebi.sk

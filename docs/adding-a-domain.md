@@ -17,7 +17,7 @@ records directly.
    ```
    Type: A
    Name: @ (or the subdomain, e.g. "app")
-   Value: 165.22.16.160
+   Value: 187.7.19.10
    ```
    For a bare apex domain that needs `www` too, a second A (or CNAME, per the
    registrar's support for apex aliasing) record pointing `www` at the same IP.
@@ -25,7 +25,7 @@ records directly.
    ```bash
    dig +short DOMAIN
    ```
-   It should return `165.22.16.160` before continuing.
+   It should return `187.7.19.10` before continuing.
 3. **Deploy the Service or Static Site** that will live at this domain — see
    `docs/deploying-a-service.md` or `docs/deploying-a-static-site.md`, which
    both include their own nginx vhost + Certbot steps.

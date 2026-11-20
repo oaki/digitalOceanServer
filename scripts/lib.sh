@@ -2,7 +2,7 @@
 # Shared config for every script in this directory. Source it, don't run it.
 set -euo pipefail
 
-DROPLET_HOST="root@165.22.16.160"   # migrated from 142.93.166.76, see ADR-0008
+VPS_HOST="root@187.7.19.10"   # Hostinger VPS since 2026-11-20, see ADR-0013 (before: Droplet 165.22.16.160, ADR-0008)
 SSH_KEY="$HOME/.ssh/id_ed25519"
 SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=no)
 
@@ -10,12 +10,12 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVICES_YML="$REPO_ROOT/inventory/services.yml"
 
 ssh_run() {
-  ssh "${SSH_OPTS[@]}" "$DROPLET_HOST" "$1"
+  ssh "${SSH_OPTS[@]}" "$VPS_HOST" "$1"
 }
 
 scp_to_droplet() {
   local local_path="$1" remote_path="$2"
-  scp "${SSH_OPTS[@]}" "$local_path" "$DROPLET_HOST:$remote_path"
+  scp "${SSH_OPTS[@]}" "$local_path" "$VPS_HOST:$remote_path"
 }
 
 # Prints the current next_free_port value from inventory/services.yml.

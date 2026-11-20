@@ -19,7 +19,7 @@ plan/add-on the owner doesn't want and DNS can be safely repointed instead.
 ## Step 1 — Install Postfix (first alias only)
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "DEBIAN_FRONTEND=noninteractive apt-get install -y postfix"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "DEBIAN_FRONTEND=noninteractive apt-get install -y postfix"
 ```
 Configure it for "Internet Site", hostname `chess-analysis.com` (or whatever
 the primary domain is) when prompted — the `DEBIAN_FRONTEND=noninteractive`
@@ -64,7 +64,7 @@ postmap /etc/postfix/virtual && systemctl reload postfix
 For **each domain** used in a Mail Alias, at the registrar:
 ```
 Type: MX     Name: @         Value: DOMAIN (or a real mail-capable host), priority 10
-Type: TXT    Name: @         Value: "v=spf1 ip4:165.22.16.160 ~all"
+Type: TXT    Name: @         Value: "v=spf1 ip4:187.7.19.10 ~all"
 ```
 Without the SPF record, mail forwarded *from* the droplet on this domain's
 behalf is likely to be spam-flagged or rejected by the destination provider
@@ -87,7 +87,7 @@ first alias.
 ## Verifying
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "postfix check && systemctl is-active postfix"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "postfix check && systemctl is-active postfix"
 ```
 Then send a real test email to the alias and confirm it arrives at the
 forwarding target.

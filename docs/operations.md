@@ -35,32 +35,32 @@ not a style choice.
 
 **Check status** (`scripts/status.sh`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "pm2 list && df -h / && free -h"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "pm2 list && df -h / && free -h"
 ```
 
 **View logs** (`scripts/logs.sh SERVICE_NAME`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "pm2 logs SERVICE_NAME --lines 50 --nostream"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "pm2 logs SERVICE_NAME --lines 50 --nostream"
 ```
 
 **Restart a service** (`scripts/restart.sh SERVICE_NAME`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "pm2 restart SERVICE_NAME"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "pm2 restart SERVICE_NAME"
 ```
 
 **Redeploy** (`scripts/deploy.sh SERVICE_NAME`):
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "cd /opt/apps/SERVICE_NAME && git pull && npm install && npm run build && pm2 restart SERVICE_NAME"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "cd /opt/apps/SERVICE_NAME && git pull && npm install && npm run build && pm2 restart SERVICE_NAME"
 ```
 
 **Disk usage:**
 ```bash
-ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@165.22.16.160 "du -sh /opt/apps/* | sort -h"
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@187.7.19.10 "du -sh /opt/apps/* | sort -h"
 ```
 
 ## Performance
 
-Baseline tuning applied to the new droplet (165.22.16.160) as of 2026-08-01:
+Baseline tuning applied to the new droplet (187.7.19.10) as of 2026-08-01:
 
 - **gzip properly configured** in `/etc/nginx/nginx.conf` — it was already
   `on` but `gzip_types` was commented out, meaning only `text/html` (nginx's
@@ -77,7 +77,7 @@ Baseline tuning applied to the new droplet (165.22.16.160) as of 2026-08-01:
   hashed filenames (safe to cache forever; a new deploy gets new filenames).
   `add-static-site.sh` and `add-php-site.sh` now include this by default.
 
-**The droplet has only 1 vCPU** (the 1GB→2GB resize only added RAM, not
+**The old Droplet had only 1 vCPU (the VPS has 4 vCPU and 15 GB RAM, so this no longer applies; `THREADS`/`HASH_MB` tuning for `worker` is a separate step after the migration)** (the 1GB→2GB resize only added RAM, not
 cores) — this is the real ceiling, not fixable by any nginx/PHP/Node config.
 Every process (all Services, both PHP-FPM pools, nginx, Postfix) shares that
 one core. This matters most for `worker1`'s Stockfish analysis, which is

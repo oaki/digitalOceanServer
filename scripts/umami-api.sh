@@ -19,7 +19,7 @@ BODY_FILE="${3:-}"
 body="{}"
 [ -n "$BODY_FILE" ] && body="$(cat "$BODY_FILE")"
 
-printf '%s' "$body" | ssh "${SSH_OPTS[@]}" "$DROPLET_HOST" \
+printf '%s' "$body" | ssh "${SSH_OPTS[@]}" "$VPS_HOST" \
   "METHOD='$METHOD' API_PATH='$API_PATH' HAS_BODY='${BODY_FILE:+1}' /root/.nvm/versions/node/v24.18.1/bin/node -e '
 const fs = require(\"node:fs\");
 const key = fs.readFileSync(\"/opt/apps/umami/.api-key\", \"utf8\").trim();

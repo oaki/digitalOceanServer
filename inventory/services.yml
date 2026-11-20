@@ -8,7 +8,7 @@
 #
 # MID-MIGRATION as of 2026-07-31 — see docs/adr/0008-migrate-droplet-142-to-165.md.
 # Everything below is deployed and verified on the NEW droplet
-# (165.22.16.160), but DNS cutover is staged per-domain — check
+# (187.7.19.10), but DNS cutover is staged per-domain — check
 # inventory/domains.yml's `droplet_serving` field for what's actually live
 # where right now. Originally snapshotted from the old droplet on 2026-07-30.
 #
@@ -432,7 +432,7 @@ static_sites:
 # docs/adr/0007-php-via-ondrej-ppa-shared-fpm-pool.md. Only works on
 # Ubuntu 22.04/24.04 (jammy/noble) — the ondrej/php PPA publishes nothing
 # for older releases.
-php_installed: true   # PHP 8.3.33 via ondrej PPA, installed 2026-07-31 on the new droplet (165.22.16.160)
+php_installed: true   # PHP 8.3.33 via ondrej PPA, installed 2026-07-31 on the new droplet (187.7.19.10)
 # php8.3-fpm purged 2026-10-30 (no site used it); only php8.4-fpm runs, php8.3-cli stays.
 # To use the shared pool again, reinstall php8.3-fpm (docs/deploying-a-php-site.md).
 php_shared_pool_socket: null
