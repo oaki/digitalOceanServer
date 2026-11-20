@@ -39,6 +39,7 @@ Stav (2026-11-20, večer): **všetky vlny okrem 8 (`consent-runner`, voliteľná
 4. `unattended-upgrades`, `sysstat`, `fail2ban` (voliteľné). Monarx agent (nainštaloval Hostinger) ostáva, sleduj jeho spotrebu.
 5. Swap 2 GB ako poistka (VPS dnes nemá swap).
 6. Postfix `myhostname` nastaviť na FQDN VPS (reverzný záznam IP je `srv2181267.hstgr.cloud`).
+   Postfix odosiela len cez IPv4 (`smtp_address_preference = ipv4`), lebo SPF `siebi.sk` (`mx -all`) pozná iba IPv4 VPS; cez IPv6 Gmail odmietol poštu ako neautentifikovanú. Overené 2026-11-20: test z `info@siebi.sk` na alias bol Gmailom prijatý (250 OK), vrátane preposlania na externú schránku. Preposlanie od cudzieho odosielateľa bez DKIM môže Gmail odmietnuť (SPF pôvodného odosielateľa po preposlaní neprejde, nie je tu SRS); pri odosielateľoch s DKIM (Gmail, Outlook) to funguje.
 
 ## Fáza 2: softvér
 
